@@ -15,22 +15,20 @@
 //------------------------------------------------------------------------------
 // Ctor
 //------------------------------------------------------------------------------
-CaptureForm::CaptureForm(Item* item,
-                         const QStringList& taglist,
-                         QWidget* parent) :
-    QDialog(parent),
-    m_item(item),
-    m_titleEdit(0),
-    m_tagsEdit(0),
-    m_tagsBox(0),
-    m_tagShortcutButton(0),
-    m_contentEdit(0),
-    m_okButton(0),
-    m_cancelButton(0),
-    m_tagShortcutDialog(new TagShortcutDialog(taglist, this)) {
+CaptureForm::CaptureForm(const QtSerializerWrapper &writer, QWidget *parent)
+    : QDialog(parent),
+      m_titleEdit(0),
+      m_tagsEdit(0),
+      m_tagsBox(0),
+      m_tagShortcutButton(0),
+      m_contentEdit(0),
+      m_okButton(0),
+      m_cancelButton(0),
+      //REMOVE
+      m_tagShortcutDialog(new TagShortcutDialog(writer.tags(), this)) {
 
-    initGui(taglist);
-    setConnections();
+    initGui(writer);
+    setConnections(writer);
 }
 
 //------------------------------------------------------------------------------
@@ -38,16 +36,30 @@ CaptureForm::CaptureForm(Item* item,
 //------------------------------------------------------------------------------
 CaptureForm::~CaptureForm() {
     // NOTE: This is only for testing. External management will be done on the item.
-    if (m_item) { delete m_item;
-        m_item = 0;
-    }
+//    if (m_item) {
+//        delete m_item;
+//        m_item = 0;
+//    }
+}
+
+//------------------------------------------------------------------------------
+void CaptureForm::show(const QtItemWrapper &item) {
+    setItem(item);
+    QDialog::show();
+}
+
+void CaptureForm::setItem(const QtItemWrapper& item) {
+    m_item = item;
+    m_titleEdit->setText(item.title);
+    m_tagsEdit->setText(item.tags.join(QString("%1 ").arg(G_SEPARATOR)));;
+    m_contentEdit->setHtml(item.content);
 }
 
 //------------------------------------------------------------------------------
 // Initialise all gui elements
 // TODO: Add capture icon
 //------------------------------------------------------------------------------
-void CaptureForm::initGui(const QStringList& taglist) {
+void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     setWindowTitle(tr("Recap - Capture Mode"));
     setGeometry(0, 0, 400, 300);
 
@@ -62,11 +74,11 @@ void CaptureForm::initGui(const QStringList& taglist) {
     // Tags
     QLabel* tagsLabel = new QLabel(tr("T&ags"));
     gl->addWidget(tagsLabel, 1, 0);
-    gl->addWidget((m_tagsEdit = new TagLineEdit(taglist)), 1, 1);
+    gl->addWidget((m_tagsEdit = new TagLineEdit(writer.tags())), 1, 1);
     tagsLabel->setBuddy(m_tagsEdit);
 
     gl->addWidget((m_tagsBox = new QComboBox), 1, 2);
-    m_tagsBox->addItems(taglist);
+    m_tagsBox->addItems(writer.tags());
 
     gl->addWidget((m_tagShortcutButton = new QPushButton(QIcon(TAG_ICON), "")), 1, 3);
 
@@ -89,37 +101,90 @@ void CaptureForm::initGui(const QStringList& taglist) {
 //------------------------------------------------------------------------------
 // Connect all signals/slots
 //------------------------------------------------------------------------------
-void CaptureForm::setConnections() {
+void CaptureForm::setConnections(const QtSerializerWrapper& writer) {
+    connect(m_titleEdit, SIGNAL(textEdited(QString)),
+            this, SLOT(on_titleEdit_textEdited(QString)));
+
+    connect(m_tagsEdit, SIGNAL(textEdited(QString)),
+            this, SLOT(on_tagsEdit_textEdited(QString)));
+
+    connect(m_contentEdit, SIGNAL(textChanged()),
+            this, SLOT(on_contentEdit_textChanged()));
+
     connect(m_tagsBox, SIGNAL(activated(QString)),
             this, SLOT(on_tagsBox_activated(QString)));
 
+    connect(&writer, SIGNAL(tagsUpdated(const QStringList&)),
+            this, SLOT(updateTagsBoxItems(const QStringList&)));
+
+    connect(this, SIGNAL(requestWrite(QtItemWrapper)),
+            &writer, SLOT(write(QtItemWrapper)));
+
+    connect(m_okButton, SIGNAL(clicked(bool)),
+            this, SLOT(on_okButton_clicked(bool)));
+
+    connect(m_cancelButton, SIGNAL(clicked(bool)),
+            this, SLOT(on_cancelButton_clicked(bool)));
+
+    // REMOVE: shortcuts can just be set in a config file
     connect(m_tagShortcutButton, SIGNAL(clicked(bool)),
             this, SLOT(on_tagsShortcutButton_clicked(bool)));
+
 }
 
 //------------------------------------------------------------------------------
 // Displays the tag shortcut manager dialog.
 //------------------------------------------------------------------------------
-void CaptureForm::on_tagsShortcutButton_clicked(bool clicked) {
+void CaptureForm::on_tagsShortcutButton_clicked(bool) {
     m_tagShortcutDialog->show();
 }
 
 //------------------------------------------------------------------------------
 // Form accepted.
 //------------------------------------------------------------------------------
-void CaptureForm::on_okButton_clicked(bool clicked) {
+void CaptureForm::on_okButton_clicked(bool) {
+    emit requestWrite(m_item);
+    accept();
 }
 
 //------------------------------------------------------------------------------
 // Form rejected.
 //------------------------------------------------------------------------------
-void CaptureForm::on_cancelButton_clicked(bool clicked) {
+void CaptureForm::on_cancelButton_clicked(bool) {
+    reject();
+    clear();
 }
 
 //------------------------------------------------------------------------------
 // Clear form of existing data
 //------------------------------------------------------------------------------
 void CaptureForm::clear() {
+    m_item.id = 0;
+
+    m_item.title.clear();
+    m_titleEdit->clear();
+
+    m_item.content.clear();
+    m_contentEdit->clear();
+
+    m_item.tags.clear();
+    m_tagsEdit->clear();
+}
+
+//------------------------------------------------------------------------------
+void CaptureForm::on_titleEdit_textEdited(const QString& title) {
+    m_item.title = title;
+}
+
+//------------------------------------------------------------------------------
+void CaptureForm::on_tagsEdit_textEdited(const QString& tagString) {
+    QStringList tags = tagString.split(G_SEPARATOR, QString::SkipEmptyParts);
+    m_item.tags = tags;
+}
+
+//------------------------------------------------------------------------------
+void CaptureForm::on_contentEdit_textChanged() {
+    m_item.content = m_contentEdit->toHtml();
 }
 
 
@@ -128,4 +193,19 @@ void CaptureForm::clear() {
 //------------------------------------------------------------------------------
 void CaptureForm::on_tagsBox_activated(const QString &tag) {
     g_addTag(*m_tagsEdit, tag);
+    if (!m_item.tags.contains(tag)) {
+        m_item.tags.push_back(tag);
+    }
+}
+
+//------------------------------------------------------------------------------
+// Updates the list of tags.
+// Signalled by QtSerializerWrapper after new tags are added to the DB.
+//------------------------------------------------------------------------------
+void CaptureForm::updateTagsBoxItems(const QStringList &tags) {
+    m_tagsBox->clear();
+    m_tagsBox->addItems(tags);
+
+    // TODO: TagLineEdit helper class (completer) needs to be updated
+    //       connect writer signal to update it too.
 }

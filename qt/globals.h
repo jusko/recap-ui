@@ -10,6 +10,8 @@
 #define CANCEL_ICON "../../../res/img/dialog-cancel.png"
 #define TAG_ICON    "../../../res/img/tag.png"
 
+const QString G_SEPARATOR = ",";
+
 //------------------------------------------------------------------------------
 // Adds a tag to a line edit if it the tag is not already present.
 //------------------------------------------------------------------------------

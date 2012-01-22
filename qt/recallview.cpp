@@ -8,137 +8,88 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QListView>
+#include <QAbstractListModel>
 #include <QDockWidget>
 #include <QTextEdit>
-
-//RESUME: Reconsider this main window approah => streamline with a dialog
-//------------------------------------------------------------------------------
-// ItemModel implementation Ctor
-//------------------------------------------------------------------------------
-class ItemModel : public QListView {
-};
-
-//------------------------------------------------------------------------------
-// ItemFinder impelmentation: Ctor
-//------------------------------------------------------------------------------
-class ItemFinder : public QDockWidget {
-    Q_OBJECT
-
-    public:
-        ItemFinder(const QStringList& tags,
-                   QWidget* parent,
-                   Qt::WindowFlags flags = 0)
-
-            : QDockWidget(parent, flags),
-              m_itemModel(0),
-              m_itemView(0),
-              m_tagEdit(0),
-              m_tagsBox(0),
-              m_tagShortcutButton(0),
-              m_tagShortcutDialog(0) {
-
-              QWidget* widget = new QWidget;
-              QGridLayout* layout = new QGridLayout(widget);
-              setWidget(widget);
-
-              //
-              QLabel* tagEditLabel = new QLabel(tr("T&ags"));
-              layout->addWidget(tagEditLabel, 0, 0);
-
-              m_tagEdit = new TagLineEdit(tags, this);
-              layout->addWidget(m_tagEdit, 0, 1, 1, 2);
-
-              tagEditLabel->setBuddy(m_tagEdit);
-
-
-              m_tagsBox = new QComboBox;
-              m_tagsBox->addItems(tags);
-              layout->addWidget(m_tagsBox, 0, 3);
-
-
-              m_tagShortcutButton = new QPushButton(QIcon(TAG_ICON), "");
-              layout->addWidget(m_tagShortcutButton, 0, 4);
-
-
-              m_itemView = new QListView;
-              layout->addWidget(m_itemView, 1, 0, 1, 5);
-
-
-              m_tagShortcutDialog = new TagShortcutDialog(tags, this);
-
-              connect(m_tagsBox, SIGNAL(activated(QString)),
-                      this, SLOT(on_tagsBox_activated(QString)));
-
-              connect(m_tagShortcutButton, SIGNAL(clicked(bool)),
-                      this, SLOT(on_tagShortcutButton_clicked(bool)));
-        }
-
-    private:
-        ItemModel*         m_itemModel;
-        QListView*         m_itemView;
-        TagLineEdit*       m_tagEdit;
-        QComboBox*         m_tagsBox;
-        QPushButton*       m_tagShortcutButton;
-        TagShortcutDialog* m_tagShortcutDialog;
-
-    private slots:
-        //---------------------------------------------------------------------
-        // Add a new tag to the line edit when combo box selection is made
-        //---------------------------------------------------------------------
-        void on_tagsBox_activated(const QString& tag) {
-            g_addTag(*m_tagEdit, tag);
-        }
-        //---------------------------------------------------------------------
-        // Displays the tag shortcut manager dialog.
-        //---------------------------------------------------------------------
-        void on_tagShortcutButton_clicked(bool) {
-            m_tagShortcutDialog->show();
-        }
-};
-
-#include <QFrame>
-//------------------------------------------------------------------------------
-// NotesEdit Implementation: Ctor
-//------------------------------------------------------------------------------
-class NotesEdit : public QFrame {
-    Q_OBJECT
-
-    public:
-        NotesEdit(QWidget* parent = 0,
-                  Qt::WindowFlags flags = 0)
-
-            : QFrame(parent, flags),
-              m_textEdit(0) {
-
-            QGridLayout* layout = new QGridLayout(this);
-            QLabel* l = new QLabel(tr("&Notes"));
-            layout->addWidget(l, 0, 2);
-
-            m_textEdit = new QTextEdit;
-            layout->addWidget(m_textEdit, 1, 0, 1, 6);
-
-            l->setBuddy(m_textEdit);
-        }
-
-    private:
-        QTextEdit* m_textEdit;
-};
-
-#include "recallview.moc"
+#include <QSplitter>
+#include <QVariant>
 
 //------------------------------------------------------------------------------
 // RecallView Implementation: Ctor
 //------------------------------------------------------------------------------
-RecallView::RecallView(const QStringList& tags, QWidget *parent)
-    : QMainWindow(parent),
-      m_itemFinder(0),
-      m_notesEdit(0) {
+RecallView::RecallView(const QStringList& tags,
+                       ItemModel& model,
+                       QWidget *parent)
+    : QDialog(parent),
+      m_itemModel(&model),
+      m_itemView(0),
+      m_tagEdit(0),
+      m_tagsBox(0),
+      m_tagShortcutButton(0),
+      m_tagShortcutDialog(0) {
 
+      // TODO: Refactor
       setWindowTitle(tr("Recap - Recall Mode"));
+      setGeometry(0, 0, 800, 600);
 
-      m_itemFinder = new ItemFinder(tags, this);
-      addDockWidget(Qt::LeftDockWidgetArea, m_itemFinder);
+      QGridLayout* layout = new QGridLayout(this);
+      QSplitter* splitter = new QSplitter;
+      layout->addWidget(splitter, 0, 0);
 
-      m_notesEdit = new NotesEdit;
-      setCentralWidget(m_notesEdit);
+      QFrame* 	   l_frame  = new QFrame;
+      QGridLayout* l_layout = new QGridLayout(l_frame);
+      splitter->addWidget(l_frame);
+      l_frame->setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
+
+      QFrame*      r_frame  = new QFrame;
+      QGridLayout* r_layout = new QGridLayout(r_frame);
+      splitter->addWidget(r_frame);
+      r_frame->setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
+
+      QLabel* tagEditLabel = new QLabel(tr("T&ags"));
+      l_layout->addWidget(tagEditLabel, 0, 0);
+
+      m_tagEdit = new TagLineEdit(tags, this);
+      l_layout->addWidget(m_tagEdit, 0, 1);
+
+      tagEditLabel->setBuddy(m_tagEdit);
+
+      m_tagsBox = new QComboBox;
+      m_tagsBox->addItems(tags);
+      l_layout->addWidget(m_tagsBox, 0, 3);
+
+      m_tagShortcutButton = new QPushButton(QIcon(TAG_ICON), "");
+      l_layout->addWidget(m_tagShortcutButton, 0, 4);
+
+      m_itemView = new QListView;
+      l_layout->addWidget(m_itemView, 1, 0, 1, 5);
+
+      QLabel* notesLabel = new QLabel(tr("&Notes"));
+      r_layout->addWidget(notesLabel, 0, 0);
+
+      m_contentEdit = new QTextEdit;
+      r_layout->addWidget(m_contentEdit, 1, 0);
+
+      notesLabel->setBuddy(m_contentEdit);
+
+      m_tagShortcutDialog = new TagShortcutDialog(tags, this);
+
+      connect(m_tagsBox, SIGNAL(activated(QString)),
+              this, SLOT(on_tagsBox_activated(QString)));
+
+      connect(m_tagShortcutButton, SIGNAL(clicked(bool)),
+              this, SLOT(on_tagShortcutButton_clicked(bool)));
+}
+
+//---------------------------------------------------------------------
+// Add a new tag to the line edit when combo box selection is made
+//---------------------------------------------------------------------
+void RecallView::on_tagsBox_activated(const QString& tag) {
+    g_addTag(*m_tagEdit, tag);
+}
+//---------------------------------------------------------------------
+// Displays the tag shortcut manager dialog.
+//---------------------------------------------------------------------
+void RecallView::on_tagShortcutButton_clicked(bool) {
+    m_tagShortcutDialog->show();
 }

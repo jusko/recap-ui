@@ -3,8 +3,9 @@
 
 //------------------------------------------------------------------------------
 // Ctor
+// REOMOVE
 //------------------------------------------------------------------------------
-TagShortcutDialog::TagShortcutDialog(const QStringList& tags, QWidget *parent) :
+TagShortcutDialog::TagShortcutDialog(const QStringList& , QWidget *parent) :
     QDialog(parent) {
 
     setModal(true);

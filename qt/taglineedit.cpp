@@ -1,10 +1,8 @@
 #include "taglineedit.h"
+#include "globals.h"
 
 #include <QStringListModel>
 #include <QCompleter>
-
-// TODO: Consider configuring multiple separators
-const char SEP = ',';
 
 #include <iostream>
 using namespace std;
@@ -18,6 +16,9 @@ class TagCompleter : public QCompleter {
         TagCompleter(const QStringList& tags, QObject* parent = 0)
             : QCompleter(tags, parent) {}
 
+        // TODO: Implement wordlist update slot -> connect serializer signal to
+        //       update it
+
     public slots:
 
         // Removes the tags in the list from the completer model and
@@ -26,12 +27,12 @@ class TagCompleter : public QCompleter {
 
             // TODO: - Removing tags from the model works only after the second ',' => fix
             //		 - Modifiy to rebuild model tags when text is deleted => currently once they're removed they never come back
-            if (text.contains(SEP)) {
+            if (text.contains(G_SEPARATOR)) {
 
-                QString prefix = text.section(SEP, -1).simplified();
+                QString prefix = text.section(G_SEPARATOR, -1).simplified();
                 if (!prefix.simplified().isEmpty()) {
 
-                    QStringList tags = text.split(SEP, QString::SkipEmptyParts,
+                    QStringList tags = text.split(G_SEPARATOR, QString::SkipEmptyParts,
                                                        Qt::CaseInsensitive);
                     tags.removeLast();
 
@@ -87,7 +88,7 @@ TagLineEdit::TagLineEdit(const QStringList &tags, QWidget *parent)
 //------------------------------------------------------------------------------
 void TagLineEdit::addTag(const QString& tag) {
     QString currentText(text());
-    int i = currentText.lastIndexOf(SEP);
+    int i = currentText.lastIndexOf(G_SEPARATOR);
     if (i > -1) {
         currentText.truncate(i);
         setText(QString("%1, %2").arg(currentText).arg(tag));
@@ -101,11 +102,12 @@ void TagLineEdit::addTag(const QString& tag) {
 // Tokenize the currently entered text into tags.
 //------------------------------------------------------------------------------
 const QStringList& TagLineEdit::tags() const {
-   static QStringList tags;
-   tags = text().split(SEP, QString::SkipEmptyParts);
+    static QStringList tags;
+    tags = text().split(G_SEPARATOR, QString::SkipEmptyParts);
 
-   int i = 0;
-   foreach(const QString& tag, tags) {
-        tags[i++] = tag.trimmed();
-   }
+    int i = 0;
+    foreach(const QString& tag, tags) {
+         tags[i++] = tag.trimmed();
+    }
+    return tags;
 }
