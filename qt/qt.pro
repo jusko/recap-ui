@@ -1,23 +1,25 @@
 HEADERS += \
-    captureform.h \
-    taglineedit.h \
-    tagshortcutdialog.h \
-    recallview.h \
-    globals.h \
-    itemmodel.h \
-    qtserializerwrapper.h
+    src/captureform.h \
+    src/taglineedit.h \
+    src/tagshortcutdialog.h \
+    src/recallview.h \
+    src/globals.h \
+    src/itemmodel.h \
+    src/qtserializerwrapper.h
 
 SOURCES += \
-    captureform.cpp \
-    main.cpp \
-    taglineedit.cpp \
-    tagshortcutdialog.cpp \
-    recallview.cpp \
-    itemmodel.cpp \
-    qtserializerwrapper.cpp
+    src/captureform.cpp \
+    src/main.cpp \
+    src/taglineedit.cpp \
+    src/tagshortcutdialog.cpp \
+    src/recallview.cpp \
+    src/itemmodel.cpp \
+    src/qtserializerwrapper.cpp
 
-INCLUDEPATH += ../../core/
+INCLUDEPATH += include/ src/
 
-OTHER_FILES += ../../../TODO
+OTHER_FILES += TODO
 
-LIBS += -L../../core/ -lrecapcore
+LIBS += -Llib/ -lrecapcore
+
+TARGET = recap-ui-qt

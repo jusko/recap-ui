@@ -53,12 +53,13 @@ Item unwrapItem(const QtItemWrapper& item) {
     std::vector<std::string> unwrappedTags;
     unwrapTagList(item.tags, unwrappedTags);
 
-    return {
+    Item rv = {
         item.id,
         item.title.toStdString(),
         item.content.toStdString(),
         unwrappedTags
     };
+    return rv;
 }
 
 //------------------------------------------------------------------------------

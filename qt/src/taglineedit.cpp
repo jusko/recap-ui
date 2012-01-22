@@ -63,7 +63,7 @@ class TagCompleter : public QCompleter {
             }
         }
 };
-#include "tagcontrol.moc"
+#include "taglineedit.moc"
 
 
 //------------------------------------------------------------------------------

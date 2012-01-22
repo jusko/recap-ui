@@ -6,9 +6,9 @@
 //------------------------------------------------------------------------------
 // Icon file specs
 //------------------------------------------------------------------------------
-#define OK_ICON     "../../../res/img/dialog-ok.png"
-#define CANCEL_ICON "../../../res/img/dialog-cancel.png"
-#define TAG_ICON    "../../../res/img/tag.png"
+#define OK_ICON     "res/img/dialog-ok.png"
+#define CANCEL_ICON "res/img/dialog-cancel.png"
+#define TAG_ICON    "res/img/tag.png"
 
 const QString G_SEPARATOR = ",";
 

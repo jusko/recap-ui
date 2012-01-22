@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 //    CaptureForm f(i, tags);
 //    f.show();
 
-    QtSerializerWrapper glue("zon.db");
+    QtSerializerWrapper glue(":memory:");
     CaptureForm cf(glue);
     QtItemWrapper fobo;
     fobo.title = "title";

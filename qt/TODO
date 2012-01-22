@@ -1,0 +1,32 @@
+Draft GUIs
+----------
+
+* CaptureForm
+  - [x] Stub in popup dialog for tagsShortcutButton
+
+* RetrieveView
+  - [ ] Implement ItemModel and hook up signals for viewing
+
+Evaluate use case for service
+------------------------------
+ - [ ] Test drive the GUIs using global shortcuts
+ - [ ] Contrast to a prototype service which just shows/hides
+
+Write glue code and implement working application
+-------------------------------------------------
+
+ - [X] Compile SQLite interface as a shared object
+ - [ ] Glue GUIs to SQLite interface
+
+Polish off
+----------
+ - [ ] Address noted GUI issues
+ - [ ] Add icons
+ - [ ] Add about
+ - [ ] Implement configuration stuff
+
+Later
+-----
+ - Reuse fakevim component from qtcreator
+ - Implement an org mode clone for the text edit
+ - Code sweep and convert c++11
