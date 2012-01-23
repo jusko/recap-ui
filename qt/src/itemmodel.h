@@ -5,6 +5,7 @@
 #include <QVector>
 class QtItemWrapper;
 class QtSerializerWrapper;
+class QModelIndex;
 
 //------------------------------------------------------------------------------
 // Model for items retrieved in recall mode.
@@ -13,9 +14,11 @@ class ItemModel : public QAbstractListModel {
     Q_OBJECT
 
     public:
-        ItemModel(const QtSerializerWrapper&, QObject *parent = 0);
+        ItemModel(QObject *parent = 0);
 
         ~ItemModel();
+
+        const QtItemWrapper *itemAt(const QModelIndex& index) const;
 
         //---------------------------------------------------------------------
         // QAbstractListModel interface
@@ -28,16 +31,10 @@ class ItemModel : public QAbstractListModel {
 
         QVariant data(const QModelIndex &index, int role) const;
 
-        bool setData(const QModelIndex &index, const QVariant &value, int role);
-
         Qt::ItemFlags flags(const QModelIndex &index) const;
 
-    signals:
-        void getItems(const QStringList& tags);
-        void writeItems(const QVector<QtItemWrapper*>& items);
-
     public slots:
-        void setModelData(const QVector<QtItemWrapper*>& items);
+        void setModel(const QVector<QtItemWrapper*>& items);
 
     private:
         QVector<QtItemWrapper*> m_items;

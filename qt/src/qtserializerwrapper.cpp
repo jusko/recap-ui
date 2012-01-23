@@ -69,6 +69,7 @@ QtSerializerWrapper::QtSerializerWrapper(const char *db_filespec)
     : m_serializer(new SQLite3_Serializer(db_filespec)) {
 
     readTags();
+    read(m_tagsCache);
 }
 
 //------------------------------------------------------------------------------
@@ -85,9 +86,14 @@ const QStringList& QtSerializerWrapper::tags() const {
 }
 
 //------------------------------------------------------------------------------
+const QVector<QtItemWrapper*>& QtSerializerWrapper::items() const {
+    return m_itemsCache;
+}
+
+//------------------------------------------------------------------------------
 void QtSerializerWrapper::read(const QStringList& tags) {
 
-    QVector<QtItemWrapper*> payloadItems;
+    m_itemsCache.clear();
 
     std::vector<std::string> requestTagList;
     std::vector<Item*>       requestItemList;
@@ -96,11 +102,11 @@ void QtSerializerWrapper::read(const QStringList& tags) {
     m_serializer->read(requestTagList, requestItemList);
 
     foreach(Item* item, requestItemList) {
-        payloadItems.push_back(wrapItem(*item));
+        m_itemsCache.push_back(wrapItem(*item));
         delete item;
         item = 0;
     }
-    emit readCompleted(payloadItems);
+    emit readCompleted(m_itemsCache);
 }
 
 //------------------------------------------------------------------------------

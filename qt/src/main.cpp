@@ -24,26 +24,17 @@ public:
 int main(int argc, char* argv[]) {
     Recap app(argc, argv);
 
-//    Item* i = new Item;
-//    QStringList tags;
-//    tags << "foo" << "bar" << "baz" << "fobo";
-//    CaptureForm f(i, tags);
-//    f.show();
+    QtSerializerWrapper glue("test.db");
 
-    QtSerializerWrapper glue(":memory:");
-    CaptureForm cf(glue);
-    QtItemWrapper fobo;
-    fobo.title = "title";
-    fobo.content = "<h1>some content</h1><br> <para>fobo wobo wibbly dibbly</para>";
-    fobo.tags << "fob" << "wob" << "wibiddy" << "woboo";
-    cf.show(fobo);
+//    CaptureForm cf(glue);
+//    QtItemWrapper fobo;
+//    fobo.title = "title";
+//    fobo.content = "<h1>some content</h1><br> <para>fobo wobo wibbly dibbly</para>";
+//    fobo.tags << "fob" << "wob" << "wibiddy" << "woboo";
+//    cf.show(fobo);
 
-//    tags = glue.tags();
-
-//    ItemModel model(glue);
-
-//    RecallView r(tags, model);
-//    r.show();
+    RecallView rv(glue);
+    rv.show();
 
     return app.exec();
 }

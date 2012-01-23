@@ -30,9 +30,14 @@ class QtSerializerWrapper : public QObject {
         ~QtSerializerWrapper();
 
         //---------------------------------------------------------------------
-        // Returns the currently cached list of tags
+        // Returns the currently cached list of tags.
         //---------------------------------------------------------------------
         const QStringList& tags() const;
+
+        //---------------------------------------------------------------------
+        // Returns the currently cached items.
+        //---------------------------------------------------------------------
+        const QVector<QtItemWrapper*>& items() const;
 
     public slots:
         //---------------------------------------------------------------------
@@ -64,7 +69,8 @@ class QtSerializerWrapper : public QObject {
         void tagsUpdated(const QStringList&);
 
     private:
-        Serializer* m_serializer;
-        QStringList m_tagsCache;
+        Serializer* 			m_serializer;
+        QStringList 			m_tagsCache;
+        QVector<QtItemWrapper*> m_itemsCache;
 };
 #endif // QTSERIALIZERWRAPPER_H

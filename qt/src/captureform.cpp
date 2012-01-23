@@ -203,9 +203,5 @@ void CaptureForm::on_tagsBox_activated(const QString &tag) {
 // Signalled by QtSerializerWrapper after new tags are added to the DB.
 //------------------------------------------------------------------------------
 void CaptureForm::updateTagsBoxItems(const QStringList &tags) {
-    m_tagsBox->clear();
-    m_tagsBox->addItems(tags);
-
-    // TODO: TagLineEdit helper class (completer) needs to be updated
-    //       connect writer signal to update it too.
+    g_update(*m_tagsBox, *m_tagsEdit, tags);
 }

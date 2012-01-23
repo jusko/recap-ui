@@ -6,3 +6,4 @@ qt/include
 qt/qt.pro.user
 *.moc
 qt/Makefile
+test.db

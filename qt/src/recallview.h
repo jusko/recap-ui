@@ -3,12 +3,14 @@
 
 #include <QDialog>
 class ItemModel;
-class QListView;
+class QModelIndex;
+class QTreeView;
 class TagLineEdit;
 class QComboBox;
 class QPushButton;
 class QTextEdit;
 class TagShortcutDialog;
+class QtSerializerWrapper;
 
 //------------------------------------------------------------------------------
 // Provides a folding tree view onto the items associated with a selection of
@@ -19,23 +21,36 @@ class RecallView : public QDialog
     Q_OBJECT
 
     public:
-        RecallView(const QStringList& tags,
-                   ItemModel& model,
+        RecallView(const QtSerializerWrapper &reader,
                    QWidget *parent = 0);
+
+        ~RecallView();
+
     signals:
 
     private:
         ItemModel*         m_itemModel;
-        QListView*         m_itemView;
-        TagLineEdit*       m_tagEdit;
+        QTreeView*         m_itemView;
+        TagLineEdit*       m_tagsEdit;
         QComboBox*         m_tagsBox;
         QPushButton*       m_tagShortcutButton;
         TagShortcutDialog* m_tagShortcutDialog;
         QTextEdit*		   m_contentEdit;
 
+    signals:
+        void sendQueryRequest(const QStringList& tags);
+
     private slots:
         void on_tagsBox_activated(const QString& tag);
+        void on_tagsBox_tagsUpdated(const QStringList& tags);
         void on_tagShortcutButton_clicked(bool);
+        void updateTagsBoxItems(const QStringList&);
+        void on_itemView_clicked(const QModelIndex&);
+        void reloadModel();
+
+    private:
+        void initGui(const QtSerializerWrapper&);
+        void setConnections(const QtSerializerWrapper&);
 };
 
 #endif // RECALLVIEW_H
