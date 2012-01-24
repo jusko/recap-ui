@@ -5,7 +5,8 @@ HEADERS += \
     src/recallview.h \
     src/globals.h \
     src/itemmodel.h \
-    src/qtserializerwrapper.h
+    src/qtserializerwrapper.h \
+    src/recapapp.h
 
 SOURCES += \
     src/captureform.cpp \
@@ -14,7 +15,8 @@ SOURCES += \
     src/tagshortcutdialog.cpp \
     src/recallview.cpp \
     src/itemmodel.cpp \
-    src/qtserializerwrapper.cpp
+    src/qtserializerwrapper.cpp \
+    src/recapapp.cpp
 
 INCLUDEPATH += include/ src/
 

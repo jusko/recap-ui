@@ -2,6 +2,7 @@
 #include "recap.h"
 #include "taglineedit.h"
 #include "tagshortcutdialog.h"
+#include "qtserializerwrapper.h"
 #include "globals.h"
 
 #include <QLabel>
@@ -11,12 +12,14 @@
 #include <QTextEdit>
 #include <QGridLayout>
 #include <QCompleter>
+#include <QDesktopWidget>
 
 //------------------------------------------------------------------------------
 // Ctor
 //------------------------------------------------------------------------------
 CaptureForm::CaptureForm(const QtSerializerWrapper &writer, QWidget *parent)
     : QDialog(parent),
+      m_item(new QtItemWrapper),
       m_titleEdit(0),
       m_tagsEdit(0),
       m_tagsBox(0),
@@ -35,24 +38,28 @@ CaptureForm::CaptureForm(const QtSerializerWrapper &writer, QWidget *parent)
 // Dtor
 //------------------------------------------------------------------------------
 CaptureForm::~CaptureForm() {
-    // NOTE: This is only for testing. External management will be done on the item.
-//    if (m_item) {
-//        delete m_item;
-//        m_item = 0;
-//    }
+    if (m_item) {
+        delete m_item;
+        m_item = 0;
+    }
 }
 
 //------------------------------------------------------------------------------
-void CaptureForm::show(const QtItemWrapper &item) {
-    setItem(item);
+void CaptureForm::show(QtItemWrapper *item) {
+    if (item) {
+        setItem(item);
+    }
+    else if (m_item) {
+        clear();
+    }
     QDialog::show();
 }
 
-void CaptureForm::setItem(const QtItemWrapper& item) {
+void CaptureForm::setItem(QtItemWrapper* item) {
     m_item = item;
-    m_titleEdit->setText(item.title);
-    m_tagsEdit->setText(item.tags.join(QString("%1 ").arg(G_SEPARATOR)));;
-    m_contentEdit->setHtml(item.content);
+    m_titleEdit->setText(item->title);
+    m_tagsEdit->setText(item->tags.join(QString("%1 ").arg(G_SEPARATOR)));;
+    m_contentEdit->setHtml(item->content);
 }
 
 //------------------------------------------------------------------------------
@@ -143,7 +150,7 @@ void CaptureForm::on_tagsShortcutButton_clicked(bool) {
 // Form accepted.
 //------------------------------------------------------------------------------
 void CaptureForm::on_okButton_clicked(bool) {
-    emit requestWrite(m_item);
+    emit requestWrite(*m_item);
     accept();
 }
 
@@ -159,32 +166,32 @@ void CaptureForm::on_cancelButton_clicked(bool) {
 // Clear form of existing data
 //------------------------------------------------------------------------------
 void CaptureForm::clear() {
-    m_item.id = 0;
+    m_item->id = 0;
 
-    m_item.title.clear();
+    m_item->title.clear();
     m_titleEdit->clear();
 
-    m_item.content.clear();
+    m_item->content.clear();
     m_contentEdit->clear();
 
-    m_item.tags.clear();
+    m_item->tags.clear();
     m_tagsEdit->clear();
 }
 
 //------------------------------------------------------------------------------
 void CaptureForm::on_titleEdit_textEdited(const QString& title) {
-    m_item.title = title;
+    m_item->title = title;
 }
 
 //------------------------------------------------------------------------------
 void CaptureForm::on_tagsEdit_textEdited(const QString& tagString) {
     QStringList tags = tagString.split(G_SEPARATOR, QString::SkipEmptyParts);
-    m_item.tags = tags;
+    m_item->tags = tags;
 }
 
 //------------------------------------------------------------------------------
 void CaptureForm::on_contentEdit_textChanged() {
-    m_item.content = m_contentEdit->toHtml();
+    m_item->content = m_contentEdit->toHtml();
 }
 
 
@@ -193,8 +200,8 @@ void CaptureForm::on_contentEdit_textChanged() {
 //------------------------------------------------------------------------------
 void CaptureForm::on_tagsBox_activated(const QString &tag) {
     g_addTag(*m_tagsEdit, tag);
-    if (!m_item.tags.contains(tag)) {
-        m_item.tags.push_back(tag);
+    if (!m_item->tags.contains(tag)) {
+        m_item->tags.push_back(tag);
     }
 }
 

@@ -164,7 +164,6 @@ void RecallView::updateTagsBoxItems(const QStringList& tags) {
 
 //------------------------------------------------------------------------------
 void RecallView::on_itemView_clicked(const QModelIndex& index) {
-    qDebug("called");
     if (index.isValid()) {
         const QtItemWrapper* item = m_itemModel->itemAt(index);
         if (item) {

@@ -2,7 +2,8 @@
 #define CAPTUREFORM_H
 
 #include <QDialog>
-#include "qtserializerwrapper.h"
+class QtSerializerWrapper;
+class QtItemWrapper;
 class QLineEdit;
 class QComboBox;
 class QTextEdit;
@@ -12,7 +13,7 @@ class TagShortcutDialog;
 //------------------------------------------------------------------------------
 // Form used to feed capture and tag information notes.
 //------------------------------------------------------------------------------
-class CaptureForm : private QDialog {
+class CaptureForm : public QDialog {
     Q_OBJECT
 
     public:
@@ -21,12 +22,10 @@ class CaptureForm : private QDialog {
 
         ~CaptureForm();
 
-        void show(const QtItemWrapper& item);
-
-        void clear();
+        void show(QtItemWrapper *item = 0);
     
     private:
-        QtItemWrapper      m_item;
+        QtItemWrapper*     m_item;
         QLineEdit*         m_titleEdit;
         TagLineEdit*       m_tagsEdit;
         QComboBox*         m_tagsBox;
@@ -38,7 +37,8 @@ class CaptureForm : private QDialog {
 
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
-        void setItem(const QtItemWrapper&);
+        void setItem(QtItemWrapper *);
+        void clear();
 
     signals:
         void requestWrite(const QtItemWrapper&);

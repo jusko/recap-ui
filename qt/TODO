@@ -1,26 +1,26 @@
-Draft GUIs
-----------
+Alpha
+-----
 
-* CaptureForm
-  - [x] Stub in popup dialog for tagsShortcutButton
+* Recap
+  - [X] Run app in mode based on cli switch
+  - [X] Create DB in ~/.recap
 
-* RetrieveView
-  - [ ] Implement ItemModel and hook up signals for viewing
+* Refactor
+  - [ ] Move g_functions into TagLineEdit
+        and subclass a TagComboBox for similar reasons
+  - [ ] Refine all comments
+
+- [ ] Improve tag filtering through Ui
+
+- [ ] Run capture in thread to fake more efficiency
 
 Evaluate use case for service
 ------------------------------
  - [ ] Test drive the GUIs using global shortcuts
  - [ ] Contrast to a prototype service which just shows/hides
 
-Write glue code and implement working application
--------------------------------------------------
-
- - [X] Compile SQLite interface as a shared object
- - [ ] Glue GUIs to SQLite interface
-
 Polish off
 ----------
- - [ ] Address noted GUI issues
  - [ ] Add icons
  - [ ] Add about
  - [ ] Implement configuration stuff
