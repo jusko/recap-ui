@@ -9,7 +9,6 @@ class TagLineEdit;
 class QComboBox;
 class QPushButton;
 class QTextEdit;
-class TagShortcutDialog;
 class QtSerializerWrapper;
 
 //------------------------------------------------------------------------------
@@ -33,8 +32,6 @@ class RecallView : public QDialog
         QTreeView*         m_itemView;
         TagLineEdit*       m_tagsEdit;
         QComboBox*         m_tagsBox;
-        QPushButton*       m_tagShortcutButton;
-        TagShortcutDialog* m_tagShortcutDialog;
         QTextEdit*		   m_contentEdit;
 
     signals:
@@ -43,7 +40,6 @@ class RecallView : public QDialog
     private slots:
         void on_tagsBox_activated(const QString& tag);
         void on_tagsBox_tagsUpdated(const QStringList& tags);
-        void on_tagShortcutButton_clicked(bool);
         void updateTagsBoxItems(const QStringList&);
         void on_itemView_clicked(const QModelIndex&);
         void reloadModel();

@@ -1,5 +1,6 @@
 #include "itemmodel.h"
 #include "qtserializerwrapper.h"
+#include "taglineedit.h"
 #include <string>
 #include <vector>
 
@@ -50,7 +51,7 @@ QVariant ItemModel::data(const QModelIndex &index, int role) const {
                 return m_items[row]->title;
             }
             else if (col == 1) {
-                return m_items[row]->tags.join(", ");
+                return m_items[row]->tags.join(TagLineEdit::TagSeparator);
             }
         }
     }

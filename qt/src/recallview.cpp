@@ -1,18 +1,13 @@
 #include "recallview.h"
 #include "taglineedit.h"
-#include "tagshortcutdialog.h"
 #include "qtserializerwrapper.h"
 #include "itemmodel.h"
-#include "globals.h"
 
 #include <QComboBox>
 #include <QPushButton>
 #include <QGridLayout>
 #include <QLabel>
 #include <QTreeView>
-#include <QAbstractListModel>
-#include <QItemSelectionModel>
-#include <QDockWidget>
 #include <QTextEdit>
 #include <QSplitter>
 #include <QVariant>
@@ -27,9 +22,7 @@ RecallView::RecallView(const QtSerializerWrapper& reader,
       m_itemModel(new ItemModel),
       m_itemView(0),
       m_tagsEdit(0),
-      m_tagsBox(0),
-      m_tagShortcutButton(0),
-      m_tagShortcutDialog(0) {
+      m_tagsBox(0) {
 
     initGui(reader);
     setConnections(reader);
@@ -80,17 +73,13 @@ void RecallView::initGui(const QtSerializerWrapper& reader) {
       m_tagsBox->addItems(reader.tags());
       l_layout->addWidget(m_tagsBox, 0, 3);
 
-      // REMOVE
-      m_tagShortcutButton = new QPushButton(QIcon(TAG_ICON), "");
-      l_layout->addWidget(m_tagShortcutButton, 0, 4);
-
       // Item list
       m_itemModel->setModel(reader.items());
 
       m_itemView = new QTreeView;
       m_itemView->setRootIsDecorated(false);
       m_itemView->setModel(m_itemModel);
-      l_layout->addWidget(m_itemView, 1, 0, 1, 5);
+      l_layout->addWidget(m_itemView, 1, 0, 1, 4);
 
       // Content notes
       QLabel* notesLabel = new QLabel(tr("&Notes"));
@@ -103,15 +92,12 @@ void RecallView::initGui(const QtSerializerWrapper& reader) {
 
 //------------------------------------------------------------------------------
 void RecallView::setConnections(const QtSerializerWrapper& reader) {
-    // REOMOVE
-    m_tagShortcutDialog = new TagShortcutDialog(reader.tags(), this);
-    connect(m_tagShortcutButton, SIGNAL(clicked(bool)),
-          this, SLOT(on_tagShortcutButton_clicked(bool)));
 
-    // REFACTOR: Tags updating
+    // Tag updates
     connect(m_tagsBox, SIGNAL(activated(QString)),
           this, SLOT(on_tagsBox_activated(QString)));
 
+    // REMOVE (not needed)
     connect(&reader, SIGNAL(tagsUpdated(QStringList)),
             this, SLOT(on_tagsBox_tagsUpdated(QStringList)));
 
@@ -131,7 +117,7 @@ void RecallView::setConnections(const QtSerializerWrapper& reader) {
 }
 
 //------------------------------------------------------------------------------
-// REFACTOR
+// REMOVE
 #include <QDebug>
 void RecallView::on_tagsBox_tagsUpdated(const QStringList&) {
     qDebug() << "Tags update";
@@ -139,19 +125,11 @@ void RecallView::on_tagsBox_tagsUpdated(const QStringList&) {
 
 //------------------------------------------------------------------------------
 // Add a new tag to the line edit when combo box selection is made
-// REFACTOR
 //------------------------------------------------------------------------------
 void RecallView::on_tagsBox_activated(const QString& tag) {
-    if (g_addTag(*m_tagsEdit, tag)) {
+    if (m_tagsEdit->addTag(tag)) {
         reloadModel();
     }
-}
-
-//------------------------------------------------------------------------------
-// Displays the tag shortcut manager dialog.
-//------------------------------------------------------------------------------
-void RecallView::on_tagShortcutButton_clicked(bool) {
-    m_tagShortcutDialog->show();
 }
 
 //------------------------------------------------------------------------------
@@ -159,7 +137,8 @@ void RecallView::on_tagShortcutButton_clicked(bool) {
 // tags change.
 //------------------------------------------------------------------------------
 void RecallView::updateTagsBoxItems(const QStringList& tags) {
-    g_update(*m_tagsBox, *m_tagsEdit, tags);
+    m_tagsBox->clear();
+    m_tagsBox->addItems(tags);
 }
 
 //------------------------------------------------------------------------------
@@ -174,5 +153,5 @@ void RecallView::on_itemView_clicked(const QModelIndex& index) {
 
 //------------------------------------------------------------------------------
 void RecallView::reloadModel() {
-    emit sendQueryRequest(m_tagsEdit->text().split(G_SEPARATOR, QString::SkipEmptyParts));
+    emit sendQueryRequest(m_tagsEdit->text().split(TagLineEdit::TagSeparator, QString::SkipEmptyParts));
 }

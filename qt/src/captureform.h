@@ -8,7 +8,6 @@ class QLineEdit;
 class QComboBox;
 class QTextEdit;
 class TagLineEdit;
-class TagShortcutDialog;
 
 //------------------------------------------------------------------------------
 // Form used to feed capture and tag information notes.
@@ -29,11 +28,9 @@ class CaptureForm : public QDialog {
         QLineEdit*         m_titleEdit;
         TagLineEdit*       m_tagsEdit;
         QComboBox*         m_tagsBox;
-        QPushButton*       m_tagShortcutButton;
         QTextEdit*         m_contentEdit;
         QPushButton*       m_okButton;
         QPushButton* 	   m_cancelButton;
-        TagShortcutDialog* m_tagShortcutDialog;
 
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
@@ -55,9 +52,6 @@ class CaptureForm : public QDialog {
 
         void on_okButton_clicked(bool);
         void on_cancelButton_clicked(bool);
-
-        // REMOVE
-        void on_tagsShortcutButton_clicked(bool);
 };
 
 #endif // CAPTUREFORM_H

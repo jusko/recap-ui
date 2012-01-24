@@ -1,18 +1,15 @@
 #include "captureform.h"
 #include "recap.h"
 #include "taglineedit.h"
-#include "tagshortcutdialog.h"
 #include "qtserializerwrapper.h"
-#include "globals.h"
 
 #include <QLabel>
+#include <QCommonStyle>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QPushButton>
 #include <QTextEdit>
 #include <QGridLayout>
-#include <QCompleter>
-#include <QDesktopWidget>
 
 //------------------------------------------------------------------------------
 // Ctor
@@ -23,12 +20,9 @@ CaptureForm::CaptureForm(const QtSerializerWrapper &writer, QWidget *parent)
       m_titleEdit(0),
       m_tagsEdit(0),
       m_tagsBox(0),
-      m_tagShortcutButton(0),
       m_contentEdit(0),
       m_okButton(0),
-      m_cancelButton(0),
-      //REMOVE
-      m_tagShortcutDialog(new TagShortcutDialog(writer.tags(), this)) {
+      m_cancelButton(0) {
 
     initGui(writer);
     setConnections(writer);
@@ -58,7 +52,7 @@ void CaptureForm::show(QtItemWrapper *item) {
 void CaptureForm::setItem(QtItemWrapper* item) {
     m_item = item;
     m_titleEdit->setText(item->title);
-    m_tagsEdit->setText(item->tags.join(QString("%1 ").arg(G_SEPARATOR)));;
+    m_tagsEdit->setText(item->tags.join(QString("%1 ").arg(TagLineEdit::TagSeparator)));;
     m_contentEdit->setHtml(item->content);
 }
 
@@ -87,8 +81,6 @@ void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     gl->addWidget((m_tagsBox = new QComboBox), 1, 2);
     m_tagsBox->addItems(writer.tags());
 
-    gl->addWidget((m_tagShortcutButton = new QPushButton(QIcon(TAG_ICON), "")), 1, 3);
-
     // Content
     QLabel* contentLabel = new QLabel(tr("&Notes"));
     gl->addWidget(contentLabel, 2, 0);
@@ -101,8 +93,8 @@ void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     // OK/Cancel
     gl->addWidget((m_okButton = new QPushButton(tr("&OK"))), 7, 2);
     gl->addWidget((m_cancelButton = new QPushButton(tr("&Cancel"))), 7, 3);
-    m_okButton->setIcon(QIcon(OK_ICON));
-    m_cancelButton->setIcon(QIcon(CANCEL_ICON));
+    m_okButton->setIcon(QCommonStyle().standardIcon(QCommonStyle::SP_DialogOkButton));
+    m_cancelButton->setIcon(QCommonStyle().standardIcon(QCommonStyle::SP_DialogCancelButton));
 }
 
 //------------------------------------------------------------------------------
@@ -133,17 +125,6 @@ void CaptureForm::setConnections(const QtSerializerWrapper& writer) {
     connect(m_cancelButton, SIGNAL(clicked(bool)),
             this, SLOT(on_cancelButton_clicked(bool)));
 
-    // REMOVE: shortcuts can just be set in a config file
-    connect(m_tagShortcutButton, SIGNAL(clicked(bool)),
-            this, SLOT(on_tagsShortcutButton_clicked(bool)));
-
-}
-
-//------------------------------------------------------------------------------
-// Displays the tag shortcut manager dialog.
-//------------------------------------------------------------------------------
-void CaptureForm::on_tagsShortcutButton_clicked(bool) {
-    m_tagShortcutDialog->show();
 }
 
 //------------------------------------------------------------------------------
@@ -185,7 +166,7 @@ void CaptureForm::on_titleEdit_textEdited(const QString& title) {
 
 //------------------------------------------------------------------------------
 void CaptureForm::on_tagsEdit_textEdited(const QString& tagString) {
-    QStringList tags = tagString.split(G_SEPARATOR, QString::SkipEmptyParts);
+    QStringList tags = tagString.split(TagLineEdit::TagSeparator, QString::SkipEmptyParts);
     m_item->tags = tags;
 }
 
@@ -199,7 +180,7 @@ void CaptureForm::on_contentEdit_textChanged() {
 // Add a new tag to the line edit when combo box selection is made
 //------------------------------------------------------------------------------
 void CaptureForm::on_tagsBox_activated(const QString &tag) {
-    g_addTag(*m_tagsEdit, tag);
+    m_tagsEdit->addTag(tag);
     if (!m_item->tags.contains(tag)) {
         m_item->tags.push_back(tag);
     }
@@ -210,5 +191,6 @@ void CaptureForm::on_tagsBox_activated(const QString &tag) {
 // Signalled by QtSerializerWrapper after new tags are added to the DB.
 //------------------------------------------------------------------------------
 void CaptureForm::updateTagsBoxItems(const QStringList &tags) {
-    g_update(*m_tagsBox, *m_tagsEdit, tags);
+    m_tagsBox->clear();
+    m_tagsBox->addItems(tags);
 }

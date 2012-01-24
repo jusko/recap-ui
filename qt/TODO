@@ -1,18 +1,17 @@
-Alpha
------
-
-* Recap
-  - [X] Run app in mode based on cli switch
-  - [X] Create DB in ~/.recap
+Pre-pre Alpha ;)
+----------------
 
 * Refactor
-  - [ ] Move g_functions into TagLineEdit
+  - [X] Move g_functions into TagLineEdit
         and subclass a TagComboBox for similar reasons
   - [ ] Refine all comments
 
-- [ ] Improve tag filtering through Ui
-
-- [ ] Run capture in thread to fake more efficiency
+* Essential Improvements
+   - [ ] Trim whitespace on tags
+   - [ ] Case insensitive queries
+   - [ ] Timestamp entries
+   - [ ] Improve tag filtering through Ui
+   - [ ] Run capture in thread to fake more efficiency
 
 Evaluate use case for service
 ------------------------------

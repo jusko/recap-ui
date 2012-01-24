@@ -15,11 +15,23 @@ class TagLineEdit : public QLineEdit {
 
         const QStringList& tags() const;
 
+        static const char* TagSeparator;
+
+    public slots:
+        //---------------------------------------------------------------------
+        // Appends a tag to the line edit
+        // @pre  The tag is not already present in the line edit
+        // @post The tag is appended to the text in the line edit
+        // @return true  : if a new tag was added
+        //		   false : if the tag was already present
+        //---------------------------------------------------------------------
+        bool addTag(const QString& tag);
+
     private:
         TagCompleter* m_tagCompleter;
 
     private slots:
-        void addTag(const QString&);
+        void complete(const QString& tag);
 };
 
 #endif // TAGLINEEDIT_H

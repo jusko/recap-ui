@@ -1,5 +1,4 @@
 #include "taglineedit.h"
-#include "globals.h"
 
 #include <QStringListModel>
 #include <QCompleter>
@@ -27,12 +26,12 @@ class TagCompleter : public QCompleter {
 
             // TODO: - Removing tags from the model works only after the second ',' => fix
             //		 - Modifiy to rebuild model tags when text is deleted => currently once they're removed they never come back
-            if (text.contains(G_SEPARATOR)) {
+            if (text.contains(TagLineEdit::TagSeparator)) {
 
-                QString prefix = text.section(G_SEPARATOR, -1).simplified();
+                QString prefix = text.section(TagLineEdit::TagSeparator, -1).simplified();
                 if (!prefix.simplified().isEmpty()) {
 
-                    QStringList tags = text.split(G_SEPARATOR, QString::SkipEmptyParts,
+                    QStringList tags = text.split(TagLineEdit::TagSeparator, QString::SkipEmptyParts,
                                                        Qt::CaseInsensitive);
                     tags.removeLast();
 
@@ -67,6 +66,11 @@ class TagCompleter : public QCompleter {
 
 
 //------------------------------------------------------------------------------
+// Class static data
+//------------------------------------------------------------------------------
+const char* TagLineEdit::TagSeparator = " ";
+
+//------------------------------------------------------------------------------
 // Ctor
 //------------------------------------------------------------------------------
 TagLineEdit::TagLineEdit(const QStringList &tags, QWidget *parent)
@@ -79,19 +83,32 @@ TagLineEdit::TagLineEdit(const QStringList &tags, QWidget *parent)
             m_tagCompleter, SLOT(setTagCompletion(const QString&)));
 
     connect(m_tagCompleter, SIGNAL(activated(const QString&)),
-            this, SLOT(addTag(const QString&)));
+            this, SLOT(complete(const QString&)));
 
 }
 
 //------------------------------------------------------------------------------
-// Adds a tag each time an autocompletion option is selected
+bool TagLineEdit::addTag(const QString& tag) {
+    QString currTags = text();
+    if (!currTags.contains(tag)) {
+        if (currTags.isEmpty()) {
+            setText(tag);
+        }
+        else {
+            setText(currTags + TagSeparator + tag);
+        }
+        return true;
+    }
+    return false;
+}
+
 //------------------------------------------------------------------------------
-void TagLineEdit::addTag(const QString& tag) {
-    QString currentText(text());
-    int i = currentText.lastIndexOf(G_SEPARATOR);
-    if (i > -1) {
-        currentText.truncate(i);
-        setText(QString("%1, %2").arg(currentText).arg(tag));
+// Complete the currently entered text (if any) with the signalled tag.
+//------------------------------------------------------------------------------
+void TagLineEdit::complete(const QString &tag) {
+    QString currText = text();
+    if (currText.contains(TagSeparator)) {
+        setText(currText.left(currText.lastIndexOf(TagSeparator) + 1) + tag);
     }
     else {
         setText(tag);
@@ -103,7 +120,7 @@ void TagLineEdit::addTag(const QString& tag) {
 //------------------------------------------------------------------------------
 const QStringList& TagLineEdit::tags() const {
     static QStringList tags;
-    tags = text().split(G_SEPARATOR, QString::SkipEmptyParts);
+    tags = text().split(TagSeparator, QString::SkipEmptyParts);
 
     int i = 0;
     foreach(const QString& tag, tags) {
