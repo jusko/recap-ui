@@ -11,6 +11,8 @@
 #include <QPushButton>
 #include <QTextEdit>
 #include <QGridLayout>
+#include <QKeyEvent>
+#include <QMessageBox>
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -93,7 +95,7 @@ void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     m_contentEdit->setWhatsThis(tr("Pasted notes can be formatted (html and rich text are both supported). "
                                    "Bullet points can be added by entering the '*' or '-' characters."));
     // OK/Cancel
-    gl->addWidget((m_okButton = new QPushButton(tr("&OK"))), 7, 2);
+    gl->addWidget((m_okButton = new QPushButton(tr("S&ave"))), 7, 2);
     gl->addWidget((m_cancelButton = new QPushButton(tr("&Cancel"))), 7, 3);
     m_okButton->setIcon(QCommonStyle().standardIcon(QCommonStyle::SP_DialogOkButton));
     m_cancelButton->setIcon(QCommonStyle().standardIcon(QCommonStyle::SP_DialogCancelButton));
@@ -177,4 +179,19 @@ void CaptureForm::addTag(const QString &tag) {
     if (!m_item->tags.contains(tag)) {
         m_item->tags.push_back(tag);
     }
+}
+
+//------------------------------------------------------------------------------
+// Confirm canceling through the Esc key.
+//------------------------------------------------------------------------------
+void CaptureForm::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Escape &&
+        QMessageBox::warning(this,
+                             tr("Recap"),
+                             tr("Discard the current note?"),
+                             QMessageBox::Yes |
+                             QMessageBox::No) != QMessageBox::Yes) {
+        return;
+    }
+    QDialog::keyPressEvent(event);
 }

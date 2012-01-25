@@ -9,6 +9,7 @@ class QLineEdit;
 class QComboBox;
 class QTextEdit;
 class TagLineEdit;
+class QKeyEvent;
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -65,6 +66,7 @@ class CaptureForm : public QDialog {
         QPushButton*   m_okButton;
         QPushButton*   m_cancelButton;
 
+        void keyPressEvent(QKeyEvent *);
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
         void setItem(QtItemWrapper *);
