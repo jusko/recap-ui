@@ -44,10 +44,11 @@ class RecallView : public QDialog {
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
 
-        ItemModel*         m_itemModel;
-        QTreeView*         m_itemView;
-        TagLineEdit*       m_tagsEdit;
-        QComboBox*         m_tagsBox;
-        QTextEdit*		   m_contentEdit;
+        ItemModel*   m_itemModel;
+        QTreeView*   m_itemView;
+        TagLineEdit* m_tagsEdit;
+        QComboBox*   m_tagsBox;
+        QTextEdit*	 m_contentEdit;
+        QStringList  m_tags;
 };
 #endif // RECALLVIEW_H

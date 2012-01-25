@@ -24,7 +24,8 @@ RecallView::RecallView(const QtSerializerWrapper& reader,
       m_itemModel(new ItemModel),
       m_itemView(0),
       m_tagsEdit(0),
-      m_tagsBox(0) {
+      m_tagsBox(0),
+      m_tags(reader.tags()) {
 
     initGui(reader);
     setConnections(reader);
@@ -144,6 +145,9 @@ void RecallView::updateNotes(const QModelIndex& index) {
 
 //------------------------------------------------------------------------------
 void RecallView::reloadModel() {
-    emit sendQueryRequest(m_tagsEdit->text().split(TagLineEdit::TagSeparator,
-                                                   QString::SkipEmptyParts));
+    QStringList tags = m_tagsEdit->text().split(TagLineEdit::TagSeparator,
+                                                QString::SkipEmptyParts);
+
+    // Show all items if no tags are entered
+    emit sendQueryRequest(tags.isEmpty() ? m_tags : tags);
 }
