@@ -113,7 +113,7 @@ void RecallView::setConnections(const QtSerializerWrapper& reader) {
 
     // ...but hanlde the request in the ItemModel
     connect(&reader, SIGNAL(readCompleted(QVector<QtItemWrapper*>)),
-            m_itemModel, SLOT(setModel(QVector<QtItemWrapper*>)));
+            m_itemModel, SLOT(resetWith(QVector<QtItemWrapper*>)));
 
     // Content notes updating
     connect(m_itemView, SIGNAL(clicked(QModelIndex)),
