@@ -114,10 +114,19 @@ void TagLineEdit::complete(const QString &tag) {
 }
 
 //------------------------------------------------------------------------------
+bool TagLineEdit::isEmpty() const {
+    return text().isEmpty();
+}
+
+//------------------------------------------------------------------------------
 // Tokenize the currently entered text into tags.
 //------------------------------------------------------------------------------
 const QStringList& TagLineEdit::tags() const {
-    static QStringList tags;
+    static QStringList tags; tags.clear();
+
+    if (isEmpty()) {
+        return tags;
+    }
     tags = text().split(TagSeparator, QString::SkipEmptyParts);
 
     int i = 0;

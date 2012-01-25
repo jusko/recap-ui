@@ -23,7 +23,17 @@ class TagLineEdit : public QLineEdit {
 
 
         //---------------------------------------------------------------------
+        // Query whether text is entered in the line edit.
+        // @return true if no text is entered.
+        // @return false if text is present.
+        //---------------------------------------------------------------------
+        bool isEmpty() const;
+
+        //---------------------------------------------------------------------
         // Returns a list of the tags typed into the line edit.
+        // @pre  The line edit is not empty
+        // @post A list of tags is produced by splitting the text on
+        //		 TagSeparators.
         //---------------------------------------------------------------------
         const QStringList& tags() const;
 

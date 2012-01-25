@@ -2,8 +2,8 @@ Pre-pre Alpha ;)
 ----------------
 
 * Essential Improvements
-   - [ ] Confirm cancel on escape!
-   - [ ] Trim whitespace on tags
+   - [X] Confirm cancel on escape!
+   - [X] Trim whitespace on tags
    - [ ] Content edit
          +line spacing
                  +HTML/plain switch/default

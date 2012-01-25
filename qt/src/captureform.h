@@ -51,7 +51,7 @@ class CaptureForm : public QDialog {
 
     private slots:
         void setItemTitle(const QString&);
-        void updateTags(const QString&);
+        void setTags();
         void updateContentNotes();
         void addTag(const QString&);
         void acceptForm(bool);
@@ -70,6 +70,7 @@ class CaptureForm : public QDialog {
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
         void setItem(QtItemWrapper *);
+        bool validateForm() const;
         void resetForm();
 };
 #endif // CAPTUREFORM_H

@@ -95,7 +95,7 @@ void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     m_contentEdit->setWhatsThis(tr("Pasted notes can be formatted (html and rich text are both supported). "
                                    "Bullet points can be added by entering the '*' or '-' characters."));
     // OK/Cancel
-    gl->addWidget((m_okButton = new QPushButton(tr("S&ave"))), 7, 2);
+    gl->addWidget((m_okButton = new QPushButton(tr("&Save"))), 7, 2);
     gl->addWidget((m_cancelButton = new QPushButton(tr("&Cancel"))), 7, 3);
     m_okButton->setIcon(QCommonStyle().standardIcon(QCommonStyle::SP_DialogOkButton));
     m_cancelButton->setIcon(QCommonStyle().standardIcon(QCommonStyle::SP_DialogCancelButton));
@@ -108,14 +108,14 @@ void CaptureForm::setConnections(const QtSerializerWrapper& writer) {
     connect(m_titleEdit, SIGNAL(textEdited(QString)),
             this, SLOT(setItemTitle(QString)));
 
-    connect(m_tagsEdit, SIGNAL(textEdited(QString)),
-            this, SLOT(updateTags(QString)));
-
-    connect(m_contentEdit, SIGNAL(textChanged()),
-            this, SLOT(updateContentNotes()));
+    connect(m_tagsEdit, SIGNAL(editingFinished()),
+            this, SLOT(setTags()));
 
     connect(m_tagsBox, SIGNAL(activated(QString)),
             this, SLOT(addTag(QString)));
+
+    connect(m_contentEdit, SIGNAL(textChanged()),
+            this, SLOT(updateContentNotes()));
 
     connect(this, SIGNAL(requestWrite(QtItemWrapper)),
             &writer, SLOT(write(QtItemWrapper)));
@@ -129,13 +129,50 @@ void CaptureForm::setConnections(const QtSerializerWrapper& writer) {
 }
 
 //------------------------------------------------------------------------------
+// Warn about items that will be orphaned.
+//------------------------------------------------------------------------------
 void CaptureForm::acceptForm(bool) {
+    if (!validateForm()) {
+        return;
+    }
     emit requestWrite(*m_item);
     accept();
 }
 
 //------------------------------------------------------------------------------
-// Form rejected.
+// Checks whether the form input is valid.
+// @return false
+//		   If no title or content is present or if the user canceled the saving
+//		   of an orphaned item (i.e., an item without tags).
+// @return true
+//		   If all fields contain input or if only the tags field is empty, but
+//		   the user confirmed the warning about that.
+//------------------------------------------------------------------------------
+bool CaptureForm::validateForm() const {
+    if (m_titleEdit->text().isEmpty()) {
+        QMessageBox::critical(const_cast<CaptureForm*>(this), "Recap",
+                              tr("Please enter a title."));
+        m_titleEdit->setFocus();
+        return false;
+    }
+    if (m_contentEdit->toPlainText().isEmpty()) {
+        QMessageBox::critical(const_cast<CaptureForm*>(this), "Recap",
+                              tr("No notes present."));
+        m_contentEdit->setFocus();
+        return false;
+    }
+    if (m_tagsEdit->isEmpty() &&
+        QMessageBox::warning(const_cast<CaptureForm*>(this),
+                             tr("Recap"),
+                             tr("The note is about to be saved but no tags "
+                                "have been entered. The notes will be orphaned."
+                                " Is this what you want?"),
+                             QMessageBox::Yes |
+                             QMessageBox::No) != QMessageBox::Yes) {
+        return false;
+    }
+    return true;
+}
 //------------------------------------------------------------------------------
 void CaptureForm::rejectForm(bool) {
     reject();
@@ -162,10 +199,8 @@ void CaptureForm::setItemTitle(const QString& title) {
 }
 
 //------------------------------------------------------------------------------
-void CaptureForm::updateTags(const QString& tagString) {
-    QStringList tags = tagString.split(TagLineEdit::TagSeparator,
-                                       QString::SkipEmptyParts);
-    m_item->tags = tags;
+void CaptureForm::setTags() {
+    m_item->tags = m_tagsEdit->tags();
 }
 
 //------------------------------------------------------------------------------
