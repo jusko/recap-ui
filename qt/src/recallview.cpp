@@ -9,7 +9,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QTreeView>
-#include <QTextEdit>
+#include <QPlainTextEdit>
 #include <QSplitter>
 #include <QVariant>
 #include <QList>
@@ -91,7 +91,7 @@ void RecallView::initGui(const QtSerializerWrapper& reader) {
       // Content notes
       QLabel* notesLabel = new QLabel(tr("&Notes"));
       r_layout->addWidget(notesLabel, 0, 0);
-      m_contentEdit = new QTextEdit;
+      m_contentEdit = new QPlainTextEdit;
       m_contentEdit->setReadOnly(true);
       r_layout->addWidget(m_contentEdit, 1, 0);
       notesLabel->setBuddy(m_contentEdit);
@@ -138,7 +138,7 @@ void RecallView::updateNotes(const QModelIndex& index) {
     if (index.isValid()) {
         const QtItemWrapper* item = m_itemModel->itemAt(index);
         if (item) {
-            m_contentEdit->setHtml(item->content);
+            m_contentEdit->setPlainText(item->content);
         }
     }
 }

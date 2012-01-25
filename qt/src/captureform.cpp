@@ -9,7 +9,7 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QPushButton>
-#include <QTextEdit>
+#include <QPlainTextEdit>
 #include <QGridLayout>
 #include <QKeyEvent>
 #include <QMessageBox>
@@ -60,7 +60,7 @@ void CaptureForm::setItem(QtItemWrapper* item) {
     m_item = item;
     m_titleEdit->setText(item->title);
     m_tagsEdit->setText(item->tags.join(TagLineEdit::TagSeparator));;
-    m_contentEdit->setHtml(item->content);
+    m_contentEdit->setPlainText(item->content);
 }
 
 //------------------------------------------------------------------------------
@@ -88,10 +88,9 @@ void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     // Content
     QLabel* contentLabel = new QLabel(tr("&Notes"));
     gl->addWidget(contentLabel, 2, 0);
-    gl->addWidget((m_contentEdit = new QTextEdit), 3, 0, 4, 4);
+    gl->addWidget((m_contentEdit = new QPlainTextEdit), 3, 0, 4, 4);
     contentLabel->setBuddy(m_contentEdit);
     m_contentEdit->setTabStopWidth(8);
-    m_contentEdit->setAutoFormatting(QTextEdit::AutoBulletList);
     m_contentEdit->setWhatsThis(tr("Pasted notes can be formatted (html and rich text are both supported). "
                                    "Bullet points can be added by entering the '*' or '-' characters."));
     // OK/Cancel
@@ -205,7 +204,7 @@ void CaptureForm::setTags() {
 
 //------------------------------------------------------------------------------
 void CaptureForm::updateContentNotes() {
-    m_item->content = m_contentEdit->toHtml();
+    m_item->content = m_contentEdit->toPlainText();
 }
 
 //------------------------------------------------------------------------------
@@ -220,7 +219,9 @@ void CaptureForm::addTag(const QString &tag) {
 // Confirm canceling through the Esc key.
 //------------------------------------------------------------------------------
 void CaptureForm::keyPressEvent(QKeyEvent* event) {
-    if (event->key() == Qt::Key_Escape &&
+    if (!m_titleEdit->text().isEmpty() 			&&
+        !m_contentEdit->toPlainText().isEmpty() &&
+        event->key() == Qt::Key_Escape 			&&
         QMessageBox::warning(this,
                              tr("Recap"),
                              tr("Discard the current note?"),

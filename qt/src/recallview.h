@@ -9,7 +9,7 @@ class QTreeView;
 class TagLineEdit;
 class QComboBox;
 class QPushButton;
-class QTextEdit;
+class QPlainTextEdit;
 class QtSerializerWrapper;
 //------------------------------------------------------------------------------
 
@@ -44,11 +44,11 @@ class RecallView : public QDialog {
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
 
-        ItemModel*   m_itemModel;
-        QTreeView*   m_itemView;
-        TagLineEdit* m_tagsEdit;
-        QComboBox*   m_tagsBox;
-        QTextEdit*	 m_contentEdit;
-        QStringList  m_tags;
+        ItemModel*   	 m_itemModel;
+        QTreeView*   	 m_itemView;
+        TagLineEdit* 	 m_tagsEdit;
+        QComboBox*   	 m_tagsBox;
+        QPlainTextEdit*	 m_contentEdit;
+        QStringList   	 m_tags;
 };
 #endif // RECALLVIEW_H

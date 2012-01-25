@@ -7,7 +7,7 @@ class QtSerializerWrapper;
 class QtItemWrapper;
 class QLineEdit;
 class QComboBox;
-class QTextEdit;
+class QPlainTextEdit;
 class TagLineEdit;
 class QKeyEvent;
 //------------------------------------------------------------------------------
@@ -58,13 +58,13 @@ class CaptureForm : public QDialog {
         void rejectForm(bool);
 
     private:
-        QtItemWrapper* m_item;
-        QLineEdit*     m_titleEdit;
-        TagLineEdit*   m_tagsEdit;
-        QComboBox*     m_tagsBox;
-        QTextEdit*     m_contentEdit;
-        QPushButton*   m_okButton;
-        QPushButton*   m_cancelButton;
+        QtItemWrapper*  m_item;
+        QLineEdit*      m_titleEdit;
+        TagLineEdit*    m_tagsEdit;
+        QComboBox*      m_tagsBox;
+        QPlainTextEdit* m_contentEdit;
+        QPushButton*    m_okButton;
+        QPushButton*    m_cancelButton;
 
         void keyPressEvent(QKeyEvent *);
         void initGui(const QtSerializerWrapper&);
