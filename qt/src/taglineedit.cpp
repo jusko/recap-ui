@@ -1,10 +1,9 @@
 #include "taglineedit.h"
-
+//------------------------------------------------------------------------------
 #include <QStringListModel>
 #include <QCompleter>
+//------------------------------------------------------------------------------
 
-#include <iostream>
-using namespace std;
 //------------------------------------------------------------------------------
 // Custom completer for more intelligent autocompletion suggestions.
 //------------------------------------------------------------------------------
@@ -64,7 +63,6 @@ class TagCompleter : public QCompleter {
 };
 #include "taglineedit.moc"
 
-
 //------------------------------------------------------------------------------
 // Class static data
 //------------------------------------------------------------------------------
@@ -103,7 +101,7 @@ bool TagLineEdit::addTag(const QString& tag) {
 }
 
 //------------------------------------------------------------------------------
-// Complete the currently entered text (if any) with the signalled tag.
+// Completes the currently entered text (if any) with the signalled tag.
 //------------------------------------------------------------------------------
 void TagLineEdit::complete(const QString &tag) {
     QString currText = text();

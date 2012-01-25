@@ -1,15 +1,16 @@
+//------------------------------------------------------------------------------
 #include "qtserializerwrapper.h"
 #include "sqlite3_serializer.h"
+//------------------------------------------------------------------------------
 #include <string>
 #include <vector>
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // Conversion Helpers
 //------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-// Converts a standard vector of standard strings into a QStringList
-//------------------------------------------------------------------------------
+// Converts a standard vector of standard strings into a QStringList.
 void wrapTagList(const std::vector<std::string>& inList,
                  QStringList& outList) {
 
@@ -18,9 +19,7 @@ void wrapTagList(const std::vector<std::string>& inList,
     }
 }
 
-//------------------------------------------------------------------------------
-// Converts a QStringList to a standard vector of standard strings
-//------------------------------------------------------------------------------
+// Converts a QStringList to a standard vector of standard strings.
 void unwrapTagList(const QStringList& inList,
                    std::vector<std::string>& outList) {
 
@@ -29,11 +28,7 @@ void unwrapTagList(const QStringList& inList,
     }
 }
 
-//------------------------------------------------------------------------------
-// Converts an Item to a QtItemWrapper
-//
-// NOTE: The QtItemWrapper is allocated on the heap.
-//------------------------------------------------------------------------------
+// Converts an Item to a QtItemWrapper (on the heap).
 QtItemWrapper* wrapItem(const Item& item) {
     QStringList wrappedTags;
     wrapTagList(item.tags, wrappedTags);
@@ -46,9 +41,7 @@ QtItemWrapper* wrapItem(const Item& item) {
     return i;
 }
 
-//------------------------------------------------------------------------------
-// Converts a QtItemWrapper to an Item
-//------------------------------------------------------------------------------
+// Converts a QtItemWrapper to an Item.
 Item unwrapItem(const QtItemWrapper& item) {
     std::vector<std::string> unwrappedTags;
     unwrapTagList(item.tags, unwrappedTags);
@@ -63,7 +56,8 @@ Item unwrapItem(const QtItemWrapper& item) {
 }
 
 //------------------------------------------------------------------------------
-// Ctor:
+// Ctor
+// TODO: Error handling
 //------------------------------------------------------------------------------
 QtSerializerWrapper::QtSerializerWrapper(const char *db_filespec)
     : m_serializer(new SQLite3_Serializer(db_filespec)) {
@@ -72,6 +66,8 @@ QtSerializerWrapper::QtSerializerWrapper(const char *db_filespec)
     read(m_tagsCache);
 }
 
+//------------------------------------------------------------------------------
+// Dtor
 //------------------------------------------------------------------------------
 QtSerializerWrapper::~QtSerializerWrapper() {
     if (m_serializer) {
@@ -90,6 +86,8 @@ const QVector<QtItemWrapper*>& QtSerializerWrapper::items() const {
     return m_itemsCache;
 }
 
+//------------------------------------------------------------------------------
+// TODO: Error handling
 //------------------------------------------------------------------------------
 void QtSerializerWrapper::read(const QStringList& tags) {
 
@@ -110,10 +108,14 @@ void QtSerializerWrapper::read(const QStringList& tags) {
 }
 
 //------------------------------------------------------------------------------
+// TODO: Error handling
+//------------------------------------------------------------------------------
 void QtSerializerWrapper::write(const QtItemWrapper &item) {
     m_serializer->write(unwrapItem(item));
 }
 
+//------------------------------------------------------------------------------
+// TODO: Error handling
 //------------------------------------------------------------------------------
 void QtSerializerWrapper::readTags() {
     std::vector<std::string> tags;

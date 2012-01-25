@@ -1,8 +1,9 @@
+//------------------------------------------------------------------------------
 #include "captureform.h"
 #include "recap.h"
 #include "taglineedit.h"
 #include "qtserializerwrapper.h"
-
+//------------------------------------------------------------------------------
 #include <QLabel>
 #include <QCommonStyle>
 #include <QLineEdit>
@@ -10,6 +11,7 @@
 #include <QPushButton>
 #include <QTextEdit>
 #include <QGridLayout>
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // Ctor
@@ -39,26 +41,26 @@ CaptureForm::~CaptureForm() {
 }
 
 //------------------------------------------------------------------------------
+// PRE: m_item has been set with the address of a new item
+//------------------------------------------------------------------------------
 void CaptureForm::show(QtItemWrapper *item) {
     if (item) {
         setItem(item);
     }
     else if (m_item) {
-        clear();
+        resetForm();
     }
     QDialog::show();
 }
 
+//------------------------------------------------------------------------------
 void CaptureForm::setItem(QtItemWrapper* item) {
     m_item = item;
     m_titleEdit->setText(item->title);
-    m_tagsEdit->setText(item->tags.join(QString("%1 ").arg(TagLineEdit::TagSeparator)));;
+    m_tagsEdit->setText(item->tags.join(TagLineEdit::TagSeparator));;
     m_contentEdit->setHtml(item->content);
 }
 
-//------------------------------------------------------------------------------
-// Initialise all gui elements
-// TODO: Add capture icon
 //------------------------------------------------------------------------------
 void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     setWindowTitle(tr("Recap - Capture Mode"));
@@ -102,35 +104,30 @@ void CaptureForm::initGui(const QtSerializerWrapper &writer) {
 //------------------------------------------------------------------------------
 void CaptureForm::setConnections(const QtSerializerWrapper& writer) {
     connect(m_titleEdit, SIGNAL(textEdited(QString)),
-            this, SLOT(on_titleEdit_textEdited(QString)));
+            this, SLOT(setItemTitle(QString)));
 
     connect(m_tagsEdit, SIGNAL(textEdited(QString)),
-            this, SLOT(on_tagsEdit_textEdited(QString)));
+            this, SLOT(updateTags(QString)));
 
     connect(m_contentEdit, SIGNAL(textChanged()),
-            this, SLOT(on_contentEdit_textChanged()));
+            this, SLOT(updateContentNotes()));
 
     connect(m_tagsBox, SIGNAL(activated(QString)),
-            this, SLOT(on_tagsBox_activated(QString)));
-
-    connect(&writer, SIGNAL(tagsUpdated(const QStringList&)),
-            this, SLOT(updateTagsBoxItems(const QStringList&)));
+            this, SLOT(addTag(QString)));
 
     connect(this, SIGNAL(requestWrite(QtItemWrapper)),
             &writer, SLOT(write(QtItemWrapper)));
 
     connect(m_okButton, SIGNAL(clicked(bool)),
-            this, SLOT(on_okButton_clicked(bool)));
+            this, SLOT(acceptForm(bool)));
 
     connect(m_cancelButton, SIGNAL(clicked(bool)),
-            this, SLOT(on_cancelButton_clicked(bool)));
+            this, SLOT(rejectForm(bool)));
 
 }
 
 //------------------------------------------------------------------------------
-// Form accepted.
-//------------------------------------------------------------------------------
-void CaptureForm::on_okButton_clicked(bool) {
+void CaptureForm::acceptForm(bool) {
     emit requestWrite(*m_item);
     accept();
 }
@@ -138,15 +135,13 @@ void CaptureForm::on_okButton_clicked(bool) {
 //------------------------------------------------------------------------------
 // Form rejected.
 //------------------------------------------------------------------------------
-void CaptureForm::on_cancelButton_clicked(bool) {
+void CaptureForm::rejectForm(bool) {
     reject();
-    clear();
+    resetForm();
 }
 
 //------------------------------------------------------------------------------
-// Clear form of existing data
-//------------------------------------------------------------------------------
-void CaptureForm::clear() {
+void CaptureForm::resetForm() {
     m_item->id = 0;
 
     m_item->title.clear();
@@ -160,37 +155,26 @@ void CaptureForm::clear() {
 }
 
 //------------------------------------------------------------------------------
-void CaptureForm::on_titleEdit_textEdited(const QString& title) {
+void CaptureForm::setItemTitle(const QString& title) {
     m_item->title = title;
 }
 
 //------------------------------------------------------------------------------
-void CaptureForm::on_tagsEdit_textEdited(const QString& tagString) {
-    QStringList tags = tagString.split(TagLineEdit::TagSeparator, QString::SkipEmptyParts);
+void CaptureForm::updateTags(const QString& tagString) {
+    QStringList tags = tagString.split(TagLineEdit::TagSeparator,
+                                       QString::SkipEmptyParts);
     m_item->tags = tags;
 }
 
 //------------------------------------------------------------------------------
-void CaptureForm::on_contentEdit_textChanged() {
+void CaptureForm::updateContentNotes() {
     m_item->content = m_contentEdit->toHtml();
 }
 
-
 //------------------------------------------------------------------------------
-// Add a new tag to the line edit when combo box selection is made
-//------------------------------------------------------------------------------
-void CaptureForm::on_tagsBox_activated(const QString &tag) {
+void CaptureForm::addTag(const QString &tag) {
     m_tagsEdit->addTag(tag);
     if (!m_item->tags.contains(tag)) {
         m_item->tags.push_back(tag);
     }
-}
-
-//------------------------------------------------------------------------------
-// Updates the list of tags.
-// Signalled by QtSerializerWrapper after new tags are added to the DB.
-//------------------------------------------------------------------------------
-void CaptureForm::updateTagsBoxItems(const QStringList &tags) {
-    m_tagsBox->clear();
-    m_tagsBox->addItems(tags);
 }

@@ -1,8 +1,9 @@
+//------------------------------------------------------------------------------
 #include "recallview.h"
 #include "taglineedit.h"
 #include "qtserializerwrapper.h"
 #include "itemmodel.h"
-
+//------------------------------------------------------------------------------
 #include <QComboBox>
 #include <QPushButton>
 #include <QGridLayout>
@@ -12,9 +13,10 @@
 #include <QSplitter>
 #include <QVariant>
 #include <QList>
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// RecallView Implementation: Ctor
+// Ctor
 //------------------------------------------------------------------------------
 RecallView::RecallView(const QtSerializerWrapper& reader,
                        QWidget *parent)
@@ -29,6 +31,8 @@ RecallView::RecallView(const QtSerializerWrapper& reader,
 }
 
 //------------------------------------------------------------------------------
+// Dtor
+//------------------------------------------------------------------------------
 RecallView::~RecallView() {
     if (m_itemModel) {
         delete m_itemModel;
@@ -36,6 +40,8 @@ RecallView::~RecallView() {
     }
 }
 
+//------------------------------------------------------------------------------
+// TODO: Try QDockWidget again (might be easiest to inherit QMainWindow).
 //------------------------------------------------------------------------------
 void RecallView::initGui(const QtSerializerWrapper& reader) {
       setWindowTitle(tr("Recap - Recall Mode"));
@@ -74,7 +80,7 @@ void RecallView::initGui(const QtSerializerWrapper& reader) {
       l_layout->addWidget(m_tagsBox, 0, 3);
 
       // Item list
-      m_itemModel->setModel(reader.items());
+      m_itemModel->resetWith(reader.items());
 
       m_itemView = new QTreeView;
       m_itemView->setRootIsDecorated(false);
@@ -95,54 +101,39 @@ void RecallView::setConnections(const QtSerializerWrapper& reader) {
 
     // Tag updates
     connect(m_tagsBox, SIGNAL(activated(QString)),
-          this, SLOT(on_tagsBox_activated(QString)));
-
-    // REMOVE (not needed)
-    connect(&reader, SIGNAL(tagsUpdated(QStringList)),
-            this, SLOT(on_tagsBox_tagsUpdated(QStringList)));
+            this, SLOT(updateItemSet(QString)));
 
     // Model updating
     connect(m_tagsEdit, SIGNAL(editingFinished()),
             this, SLOT(reloadModel()));
 
+    // Request a read from this class...
     connect(this, SIGNAL(sendQueryRequest(QStringList)),
             &reader, SLOT(read(QStringList)));
 
+    // ...but hanlde the request in the ItemModel
     connect(&reader, SIGNAL(readCompleted(QVector<QtItemWrapper*>)),
             m_itemModel, SLOT(setModel(QVector<QtItemWrapper*>)));
 
     // Content notes updating
     connect(m_itemView, SIGNAL(clicked(QModelIndex)),
-            this, SLOT(on_itemView_clicked(QModelIndex)));
+            this, SLOT(updateNotes(QModelIndex)));
 }
 
 //------------------------------------------------------------------------------
-// REMOVE
-#include <QDebug>
-void RecallView::on_tagsBox_tagsUpdated(const QStringList&) {
-    qDebug() << "Tags update";
-}
-
+// Add a new tag to the line edit when combo box selection is made, and
+// reload the items displayed accordingly.
 //------------------------------------------------------------------------------
-// Add a new tag to the line edit when combo box selection is made
-//------------------------------------------------------------------------------
-void RecallView::on_tagsBox_activated(const QString& tag) {
+void RecallView::updateItemSet(const QString& tag) {
     if (m_tagsEdit->addTag(tag)) {
         reloadModel();
     }
 }
 
 //------------------------------------------------------------------------------
-// Update the combobox and line edit completer when available
-// tags change.
+// Update the notes displayed with those of the selected item
 //------------------------------------------------------------------------------
-void RecallView::updateTagsBoxItems(const QStringList& tags) {
-    m_tagsBox->clear();
-    m_tagsBox->addItems(tags);
-}
-
-//------------------------------------------------------------------------------
-void RecallView::on_itemView_clicked(const QModelIndex& index) {
+void RecallView::updateNotes(const QModelIndex& index) {
     if (index.isValid()) {
         const QtItemWrapper* item = m_itemModel->itemAt(index);
         if (item) {
@@ -153,5 +144,6 @@ void RecallView::on_itemView_clicked(const QModelIndex& index) {
 
 //------------------------------------------------------------------------------
 void RecallView::reloadModel() {
-    emit sendQueryRequest(m_tagsEdit->text().split(TagLineEdit::TagSeparator, QString::SkipEmptyParts));
+    emit sendQueryRequest(m_tagsEdit->text().split(TagLineEdit::TagSeparator,
+                                                   QString::SkipEmptyParts));
 }

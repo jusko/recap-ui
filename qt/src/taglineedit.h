@@ -1,29 +1,48 @@
 #ifndef TAGLINEEDIT_H
 #define TAGLINEEDIT_H
-
+//------------------------------------------------------------------------------
 #include <QLineEdit>
+//------------------------------------------------------------------------------
 class TagCompleter;
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// Line edit providing smarter autocompletion hints for tags
+// Line edit providing smarter autocompletion for tags.
 //------------------------------------------------------------------------------
 class TagLineEdit : public QLineEdit {
     Q_OBJECT
 
     public:
+        //---------------------------------------------------------------------
+        // Creates a standard QLineEdit with autocompletion tweaked to
+        // adapt itself when a new tag is being entered.
+        // @param tags
+        //		  The set of tags to use as a wordlist for the autocompleter
+        //---------------------------------------------------------------------
         TagLineEdit(const QStringList& tags, QWidget *parent = 0);
 
+
+        //---------------------------------------------------------------------
+        // Returns a list of the tags typed into the line edit.
+        //---------------------------------------------------------------------
         const QStringList& tags() const;
 
+        //---------------------------------------------------------------------
+        // Tags are space separated for now (this might become more
+        // configurable).
+        //---------------------------------------------------------------------
         static const char* TagSeparator;
 
     public slots:
         //---------------------------------------------------------------------
         // Appends a tag to the line edit
-        // @pre  The tag is not already present in the line edit
-        // @post The tag is appended to the text in the line edit
-        // @return true  : if a new tag was added
-        //		   false : if the tag was already present
+        // @pre    The tag is not already present in the line edit
+        // @post   The tag is appended to the text in the line edit separated
+        //		   with a separator
+        // @return true
+        //		   If a new tag was added
+        // @return false
+        //		   If the tag was already present
         //---------------------------------------------------------------------
         bool addTag(const QString& tag);
 
@@ -33,5 +52,4 @@ class TagLineEdit : public QLineEdit {
     private slots:
         void complete(const QString& tag);
 };
-
 #endif // TAGLINEEDIT_H

@@ -4,7 +4,7 @@ Pre-pre Alpha ;)
 * Refactor
   - [X] Move g_functions into TagLineEdit
         and subclass a TagComboBox for similar reasons
-  - [ ] Refine all comments
+  - [X] Refine all comments
 
 * Essential Improvements
    - [ ] Trim whitespace on tags
@@ -12,11 +12,15 @@ Pre-pre Alpha ;)
    - [ ] Timestamp entries
    - [ ] Improve tag filtering through Ui
    - [ ] Run capture in thread to fake more efficiency
+   - [ ] Trap potential errors in read/write interface and propogate
+                 errors to log and notify via a message box.
 
 Evaluate use case for service
 ------------------------------
  - [ ] Test drive the GUIs using global shortcuts
  - [ ] Contrast to a prototype service which just shows/hides
+ - [ ] Weigh up benefits of breaking RO policy of RecallView, to
+       provide convenient inline editing.
 
 Polish off
 ----------

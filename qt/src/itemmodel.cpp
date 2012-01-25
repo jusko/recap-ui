@@ -1,25 +1,40 @@
+//------------------------------------------------------------------------------
 #include "itemmodel.h"
 #include "qtserializerwrapper.h"
 #include "taglineedit.h"
 #include <string>
 #include <vector>
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// Ctor:
+// Ctor
 //------------------------------------------------------------------------------
 ItemModel::ItemModel(QObject *parent) :
     QAbstractListModel(parent) {
 }
 
 //------------------------------------------------------------------------------
+// Dtor
+//------------------------------------------------------------------------------
 ItemModel::~ItemModel() {
+    deleteItems();
 }
 
 //------------------------------------------------------------------------------
-#include <QDebug>
-void ItemModel::setModel(const QVector<QtItemWrapper*>& items) {
+void ItemModel::deleteItems() {
+    foreach (QtItemWrapper* i, m_items) {
+        if (i) {
+            delete i;
+            i = 0;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+void ItemModel::resetWith(const QVector<QtItemWrapper*>& items) {
     if (!m_items.empty()) {
         beginRemoveRows(QModelIndex(), 0, m_items.size() - 1);
+        deleteItems();
         m_items.clear();
         endRemoveRows();
     }
@@ -36,6 +51,16 @@ int ItemModel::rowCount(const QModelIndex &) const {
 //------------------------------------------------------------------------------
 int ItemModel::columnCount(const QModelIndex &) const {
     return 2;
+}
+
+//------------------------------------------------------------------------------
+QVariant ItemModel::headerData(int section,
+                               Qt::Orientation orientation, int role) const {
+
+    if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
+        return section == 0 ? QString(tr("Title")) : QString(tr("Tags"));
+    }
+    return QVariant();
 }
 
 //------------------------------------------------------------------------------
@@ -58,14 +83,6 @@ QVariant ItemModel::data(const QModelIndex &index, int role) const {
     return QVariant();
 }
 
-//------------------------------------------------------------------------------
-QVariant ItemModel::headerData(int section, Qt::Orientation orientation, int role) const {
-
-    if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
-        return section == 0 ? QString(tr("Title")) : QString(tr("Tags"));
-    }
-    return QVariant();
-}
 
 //------------------------------------------------------------------------------
 Qt::ItemFlags ItemModel::flags(const QModelIndex &index) const {
