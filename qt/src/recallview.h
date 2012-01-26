@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------
 #include <QMainWindow>
 //------------------------------------------------------------------------------
+class QToolBar;
 class ItemModel;
 class QModelIndex;
 class QTreeView;
@@ -10,6 +11,7 @@ class TagLineEdit;
 class QComboBox;
 class QPushButton;
 class QPlainTextEdit;
+class QtItemWrapper;
 class QtSerializerWrapper;
 //------------------------------------------------------------------------------
 
@@ -38,6 +40,7 @@ class RecallView : public QMainWindow {
     private slots:
         void updateItemSet(const QString& tag);
         void updateNotes(const QModelIndex&);
+        void trashItem();
         void reloadModel();
 
     private:
@@ -50,6 +53,7 @@ class RecallView : public QMainWindow {
         TagLineEdit* 	 m_tagsEdit;
         QComboBox*   	 m_tagsBox;
         QPlainTextEdit*	 m_contentEdit;
+        QToolBar*		 m_toolbar;
         QStringList   	 m_tags;
 };
 #endif // RECALLVIEW_H

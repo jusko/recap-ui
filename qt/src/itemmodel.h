@@ -24,7 +24,7 @@ class ItemModel : public QAbstractListModel {
         // @return The address of the item associated with the model index.
         //		   If no item could be found, NULL is returned.
         //---------------------------------------------------------------------
-        const QtItemWrapper *itemAt(const QModelIndex& index) const;
+        QtItemWrapper* itemAt(const QModelIndex& index) const;
 
         ItemModel(QObject *parent = 0);
 
@@ -39,6 +39,14 @@ class ItemModel : public QAbstractListModel {
         //---------------------------------------------------------------------
         void resetWith(const QVector<QtItemWrapper*>& items);
 
+        //---------------------------------------------------------------------
+        // Remove the item from the model and forward request for trashing it.
+        // @pre   The item exists in the model.
+        // @post  The item is removed from the model and the sendTrashRequest()
+        //		  signal is emitted.
+        //---------------------------------------------------------------------
+        void trashItem(const QModelIndex& index);
+
     public:
         //---------------------------------------------------------------------
         // Reimplemented QAbstractListModel interface
@@ -52,6 +60,9 @@ class ItemModel : public QAbstractListModel {
         virtual QVariant data(const QModelIndex &index, int role) const;
 
         virtual Qt::ItemFlags flags(const QModelIndex &index) const;
+
+    signals:
+        void sendTrashRequest(const QtItemWrapper&);
 
     private:
         void deleteItems();

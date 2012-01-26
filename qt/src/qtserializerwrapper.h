@@ -82,6 +82,13 @@ class QtSerializerWrapper : public QObject {
         void write(const QtItemWrapper& item);
 
         //---------------------------------------------------------------------
+        // Trashes the given item.
+        // @pre  The item parameter has been written previously.
+        // @post The item is trashed and will no longer be queryable.
+        //---------------------------------------------------------------------
+        void trash(const QtItemWrapper& item);
+
+        //---------------------------------------------------------------------
         // Sends a request to update the tag cache.
         // @post Notifies via tagsUpdated signal.
         //---------------------------------------------------------------------

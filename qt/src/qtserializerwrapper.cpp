@@ -115,6 +115,11 @@ void QtSerializerWrapper::write(const QtItemWrapper &item) {
 }
 
 //------------------------------------------------------------------------------
+void QtSerializerWrapper::trash(const QtItemWrapper &item) {
+    m_serializer->trash(unwrapItem(item));
+}
+
+//------------------------------------------------------------------------------
 // TODO: Error handling
 //------------------------------------------------------------------------------
 void QtSerializerWrapper::readTags() {

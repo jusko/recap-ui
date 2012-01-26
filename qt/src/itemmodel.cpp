@@ -91,9 +91,21 @@ Qt::ItemFlags ItemModel::flags(const QModelIndex &index) const {
 }
 
 //------------------------------------------------------------------------------
-const QtItemWrapper* ItemModel::itemAt(const QModelIndex& index) const {
+QtItemWrapper* ItemModel::itemAt(const QModelIndex& index) const {
     if (index.isValid() && index.row() < m_items.size()) {
         return m_items[index.row()];
     }
     return 0;
+}
+
+//------------------------------------------------------------------------------
+void ItemModel::trashItem(const QModelIndex &index) {
+    QtItemWrapper* item = itemAt(index);
+    if (item) {
+        int row = index.row();
+        beginRemoveRows(QModelIndex(), row, row);
+        m_items.remove(row);
+        emit sendTrashRequest(*item);
+        endRemoveRows();
+    }
 }

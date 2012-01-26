@@ -9,19 +9,20 @@ Pre-pre Alpha ;)
                  +HTML/plain switch/default
                  +rich text controls
    - [ ] Case insensitive queries
-   - [ ] Timestamp entries
+   - [X] Timestamp entries
    - [ ] Improve tag filtering through Ui
    - [ ] Run capture in thread to fake more efficiency
    - [ ] Trap potential errors in read/write interface and propogate
                  errors to log and notify via a message box.
    - [ ] Modify recall mode to allow item editing.
-   - [ ] Ensure transaction safety
-   - [ ] Tag box needs to only show a set number of tags and be scrollable
+   - [X] Ensure transaction safety
+   - [X] Tag box needs to only show a set number of tags and be scrollable
+   - [ ] Save previous window geometry settings
 
 Evaluate use case for service
 ------------------------------
- - [ ] Test drive the GUIs using global shortcuts
- - [ ] Contrast to a prototype service which just shows/hides
+ - [X] Test drive the GUIs using global shortcuts
+ - [-] Contrast to a prototype service which just shows/hides (no need)
  - [X] Weigh up benefits of breaking RO policy of RecallView, to
        provide convenient inline editing.
 

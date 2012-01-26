@@ -12,7 +12,10 @@
 #include <QPlainTextEdit>
 #include <QSplitter>
 #include <QVariant>
+#include <QDockWidget>
+#include <QCommonStyle>
 #include <QList>
+#include <QToolBar>
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -25,6 +28,8 @@ RecallView::RecallView(const QtSerializerWrapper& reader,
       m_itemView(0),
       m_tagsEdit(0),
       m_tagsBox(0),
+      m_contentEdit(0),
+      m_toolbar(0),
       m_tags(reader.tags()) {
 
     initGui(reader);
@@ -42,10 +47,20 @@ RecallView::~RecallView() {
 }
 
 //------------------------------------------------------------------------------
-#include <QDockWidget>
 void RecallView::initGui(const QtSerializerWrapper& reader) {
       setWindowTitle(tr("Recap - Recall Mode"));
       setGeometry(0, 0, 800, 600);
+
+      // Toolbar
+      QToolBar* m_toolbar = new QToolBar;
+      m_toolbar->setMovable(true);
+      m_toolbar->addAction(
+          QCommonStyle().standardIcon(QCommonStyle::SP_TrashIcon),
+          "Trash the selected item.",
+          this,
+          SLOT(trashItem())
+      );
+      addToolBar(Qt::LeftToolBarArea, m_toolbar);
 
       // Left Dock
       QDockWidget* tagListControl = new QDockWidget;
@@ -98,6 +113,9 @@ void RecallView::setConnections(const QtSerializerWrapper& reader) {
     connect(m_tagsEdit, SIGNAL(editingFinished()),
             this, SLOT(reloadModel()));
 
+    connect(m_itemModel, SIGNAL(sendTrashRequest(QtItemWrapper)),
+            &reader, SLOT(trash(QtItemWrapper)));
+
     // Request a read from this class...
     connect(this, SIGNAL(sendQueryRequest(QStringList)),
             &reader, SLOT(read(QStringList)));
@@ -147,4 +165,9 @@ void RecallView::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Escape) {
         close();
     }
+}
+
+//------------------------------------------------------------------------------
+void RecallView::trashItem() {
+    m_itemModel->trashItem(m_itemView->currentIndex());
 }
