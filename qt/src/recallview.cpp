@@ -20,7 +20,7 @@
 //------------------------------------------------------------------------------
 RecallView::RecallView(const QtSerializerWrapper& reader,
                        QWidget *parent)
-    : QDialog(parent),
+    : QMainWindow(parent),
       m_itemModel(new ItemModel),
       m_itemView(0),
       m_tagsEdit(0),
@@ -42,31 +42,18 @@ RecallView::~RecallView() {
 }
 
 //------------------------------------------------------------------------------
-// TODO: Try QDockWidget again (might be easiest to inherit QMainWindow).
-//------------------------------------------------------------------------------
+#include <QDockWidget>
 void RecallView::initGui(const QtSerializerWrapper& reader) {
       setWindowTitle(tr("Recap - Recall Mode"));
       setGeometry(0, 0, 800, 600);
 
-      // Splitter layout
-      QGridLayout* layout = new QGridLayout(this);
-      QSplitter* splitter = new QSplitter;
-      layout->addWidget(splitter, 0, 0);
-
-      QFrame* 	   l_frame  = new QFrame;
-      QGridLayout* l_layout = new QGridLayout(l_frame);
-      splitter->addWidget(l_frame);
-      l_frame->setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
-
-      QFrame*      r_frame  = new QFrame;
-      QGridLayout* r_layout = new QGridLayout(r_frame);
-      splitter->addWidget(r_frame);
-      r_frame->setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
-
-      QList<int> sizes;
-      sizes.push_back(300);
-      sizes.push_back(500);
-      splitter->setSizes(sizes);
+      // Left Dock
+      QDockWidget* tagListControl = new QDockWidget;
+      tagListControl->setFeatures(QDockWidget::DockWidgetMovable);
+      addDockWidget(Qt::LeftDockWidgetArea, tagListControl);
+      QWidget* dockChildWidget = new QWidget;
+      QGridLayout* l_layout = new QGridLayout(dockChildWidget);
+      tagListControl->setWidget(dockChildWidget);
 
       // Tag edit
       QLabel* tagEditLabel = new QLabel(tr("T&ags"));
@@ -89,6 +76,9 @@ void RecallView::initGui(const QtSerializerWrapper& reader) {
       l_layout->addWidget(m_itemView, 1, 0, 1, 4);
 
       // Content notes
+      QWidget* centralWidget = new QWidget;
+      setCentralWidget(centralWidget);
+      QGridLayout* r_layout = new QGridLayout(centralWidget);
       QLabel* notesLabel = new QLabel(tr("&Notes"));
       r_layout->addWidget(notesLabel, 0, 0);
       m_contentEdit = new QPlainTextEdit;
@@ -150,4 +140,11 @@ void RecallView::reloadModel() {
 
     // Show all items if no tags are entered
     emit sendQueryRequest(tags.isEmpty() ? m_tags : tags);
+}
+
+//------------------------------------------------------------------------------
+void RecallView::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Escape) {
+        close();
+    }
 }

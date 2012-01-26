@@ -1,7 +1,7 @@
 #ifndef RECALLVIEW_H
 #define RECALLVIEW_H
 //------------------------------------------------------------------------------
-#include <QDialog>
+#include <QMainWindow>
 //------------------------------------------------------------------------------
 class ItemModel;
 class QModelIndex;
@@ -17,7 +17,7 @@ class QtSerializerWrapper;
 // The Ui seen in the application's "recall mode". Sole purpose is to recall
 // notes saved in "capture mode" both rapidly and intuitively.
 //------------------------------------------------------------------------------
-class RecallView : public QDialog {
+class RecallView : public QMainWindow {
     Q_OBJECT
 
     public:
@@ -43,6 +43,7 @@ class RecallView : public QDialog {
     private:
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
+        void keyPressEvent(QKeyEvent *);
 
         ItemModel*   	 m_itemModel;
         QTreeView*   	 m_itemView;
