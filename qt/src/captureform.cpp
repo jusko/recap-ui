@@ -28,6 +28,7 @@ CaptureForm::CaptureForm(const QtSerializerWrapper &writer, QWidget *parent)
       m_okButton(0),
       m_cancelButton(0) {
 
+    m_item->id = 0;
     initGui(writer);
     setConnections(writer);
 }
@@ -64,6 +65,7 @@ void CaptureForm::setItem(QtItemWrapper* item) {
 }
 
 //------------------------------------------------------------------------------
+#include <QRegExpValidator>
 void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     setWindowTitle(tr("Recap - Capture Mode"));
     setGeometry(0, 0, 400, 300);

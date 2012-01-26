@@ -4,12 +4,10 @@ Pre-pre Alpha ;)
 * Essential Improvements
    - [X] Confirm cancel on escape!
    - [X] Trim whitespace on tags
-   - [ ] Content edit
+   - [X] Content edit
          +line spacing
                  +HTML/plain switch/default
                  +rich text controls
-   - [ ] Either filter trailing commas, semicolons etc. or
-                 allow multiple separators to be defined.
    - [ ] Case insensitive queries
    - [ ] Timestamp entries
    - [ ] Improve tag filtering through Ui
@@ -27,11 +25,12 @@ Evaluate use case for service
  - [X] Weigh up benefits of breaking RO policy of RecallView, to
        provide convenient inline editing.
 
-Polish off
-----------
+Nice to have (low priority)
+---------------------------
  - [ ] Add icons
  - [ ] Add about
  - [ ] Implement configuration stuff
+       + [ ] Set regexp validators on tags based on config file
 
 Later
 -----

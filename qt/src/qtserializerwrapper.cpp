@@ -98,7 +98,6 @@ void QtSerializerWrapper::read(const QStringList& tags) {
 
     unwrapTagList(tags, requestTagList);
     m_serializer->read(requestTagList, requestItemList);
-
     foreach(Item* item, requestItemList) {
         m_itemsCache.push_back(wrapItem(*item));
         delete item;
@@ -111,7 +110,8 @@ void QtSerializerWrapper::read(const QStringList& tags) {
 // TODO: Error handling
 //------------------------------------------------------------------------------
 void QtSerializerWrapper::write(const QtItemWrapper &item) {
-    m_serializer->write(unwrapItem(item));
+    Item i = unwrapItem(item);
+    m_serializer->write(i);
 }
 
 //------------------------------------------------------------------------------
