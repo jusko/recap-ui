@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------
 #include <QAbstractListModel>
 #include <QVector>
+#include <QMap>
 //------------------------------------------------------------------------------
 class QtItemWrapper;
 class QtSerializerWrapper;
@@ -26,6 +27,13 @@ class ItemModel : public QAbstractListModel {
         //---------------------------------------------------------------------
         QtItemWrapper* itemAt(const QModelIndex& index) const;
 
+        //---------------------------------------------------------------------
+        // Query items edited state.
+        // @return true  If items have been edited and not updated.
+        // @return false If no items have been edited since the last reset.
+        //---------------------------------------------------------------------
+        bool hasEdits() const;
+
         ItemModel(QObject *parent = 0);
 
         ~ItemModel();
@@ -47,6 +55,25 @@ class ItemModel : public QAbstractListModel {
         //---------------------------------------------------------------------
         void trashItem(const QModelIndex& index);
 
+        //---------------------------------------------------------------------
+        // Forwards a request to save all items changed since the last reset.
+        // @post The edit history is reset and the sendUpdateRequest() signal
+        //	     is emitted.
+        //---------------------------------------------------------------------
+        void saveItems();
+
+        //---------------------------------------------------------------------
+        // Updates an item's notes.
+        // @param index
+        //		  The index of the item to update.
+        // @param notes
+        //        The contents of the notes.
+        // @pre   The item exists in the model.
+        // @post  The item's notes are updated and it is flagged as having been
+        //		  edited.
+        //---------------------------------------------------------------------
+        void updateNotes(const QModelIndex& index, const QString& notes);
+
     public:
         //---------------------------------------------------------------------
         // Reimplemented QAbstractListModel interface
@@ -59,14 +86,19 @@ class ItemModel : public QAbstractListModel {
 
         virtual QVariant data(const QModelIndex &index, int role) const;
 
+        virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
+
         virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 
     signals:
         void sendTrashRequest(const QtItemWrapper&);
+        void sendUpdateRequest(const QtItemWrapper&);
 
     private:
         void deleteItems();
+        void deleteEditMap();
 
-        QVector<QtItemWrapper*> m_items;
+        QVector<QtItemWrapper*>   m_items;
+        QMap<int, QtItemWrapper*> m_editMap;
 };
 #endif // ITEMMODEL_H

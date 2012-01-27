@@ -11,13 +11,19 @@ Pre-pre Alpha ;)
    - [ ] Case insensitive queries
    - [X] Timestamp entries
    - [ ] Improve tag filtering through Ui
+   - [ ] Add query clear button
    - [ ] Run capture in thread to fake more efficiency
    - [ ] Trap potential errors in read/write interface and propogate
                  errors to log and notify via a message box.
-   - [ ] Modify recall mode to allow item editing.
+   - [X] Modify recall mode to allow item editing.
+   - [ ] Modify query-by-tag request not to:j
+                 - [ ] requery with the same tags as the previous query
+         - [ ] replace edited items with data from the query
+
    - [X] Ensure transaction safety
    - [X] Tag box needs to only show a set number of tags and be scrollable
    - [ ] Save previous window geometry settings
+   - [ ] Encrypted entries
 
 Evaluate use case for service
 ------------------------------

@@ -16,12 +16,13 @@
 #include <QCommonStyle>
 #include <QList>
 #include <QToolBar>
+#include <QMessageBox>
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // Ctor
 //------------------------------------------------------------------------------
-RecallView::RecallView(const QtSerializerWrapper& reader,
+RecallView::RecallView(const QtSerializerWrapper& serializer,
                        QWidget *parent)
     : QMainWindow(parent),
       m_itemModel(new ItemModel),
@@ -30,10 +31,11 @@ RecallView::RecallView(const QtSerializerWrapper& reader,
       m_tagsBox(0),
       m_contentEdit(0),
       m_toolbar(0),
-      m_tags(reader.tags()) {
+      m_tags(serializer.tags()),
+      itemNotesChanged(false) {
 
-    initGui(reader);
-    setConnections(reader);
+    initGui(serializer);
+    setConnections(serializer);
 }
 
 //------------------------------------------------------------------------------
@@ -47,7 +49,7 @@ RecallView::~RecallView() {
 }
 
 //------------------------------------------------------------------------------
-void RecallView::initGui(const QtSerializerWrapper& reader) {
+void RecallView::initGui(const QtSerializerWrapper& serializer) {
       setWindowTitle(tr("Recap - Recall Mode"));
       setGeometry(0, 0, 800, 600);
 
@@ -59,6 +61,12 @@ void RecallView::initGui(const QtSerializerWrapper& reader) {
           "Trash the selected item.",
           this,
           SLOT(trashItem())
+      );
+      m_toolbar->addAction(
+          QCommonStyle().standardIcon(QCommonStyle::SP_DialogSaveButton),
+          "Save changes",
+          m_itemModel,
+          SLOT(saveItems())
       );
       addToolBar(Qt::LeftToolBarArea, m_toolbar);
 
@@ -73,17 +81,17 @@ void RecallView::initGui(const QtSerializerWrapper& reader) {
       // Tag edit
       QLabel* tagEditLabel = new QLabel(tr("T&ags"));
       l_layout->addWidget(tagEditLabel, 0, 0);
-      m_tagsEdit = new TagLineEdit(reader.tags(), this);
+      m_tagsEdit = new TagLineEdit(serializer.tags(), this);
       l_layout->addWidget(m_tagsEdit, 0, 1);
       tagEditLabel->setBuddy(m_tagsEdit);
 
       // Tag box
       m_tagsBox = new QComboBox;
-      m_tagsBox->addItems(reader.tags());
+      m_tagsBox->addItems(serializer.tags());
       l_layout->addWidget(m_tagsBox, 0, 3);
 
       // Item list
-      m_itemModel->resetWith(reader.items());
+      m_itemModel->resetWith(serializer.items());
 
       m_itemView = new QTreeView;
       m_itemView->setRootIsDecorated(false);
@@ -97,13 +105,13 @@ void RecallView::initGui(const QtSerializerWrapper& reader) {
       QLabel* notesLabel = new QLabel(tr("&Notes"));
       r_layout->addWidget(notesLabel, 0, 0);
       m_contentEdit = new QPlainTextEdit;
-      m_contentEdit->setReadOnly(true);
+      m_contentEdit->setTabStopWidth(8);
       r_layout->addWidget(m_contentEdit, 1, 0);
       notesLabel->setBuddy(m_contentEdit);
 }
 
 //------------------------------------------------------------------------------
-void RecallView::setConnections(const QtSerializerWrapper& reader) {
+void RecallView::setConnections(const QtSerializerWrapper& serializer) {
 
     // Tag updates
     connect(m_tagsBox, SIGNAL(activated(QString)),
@@ -114,19 +122,26 @@ void RecallView::setConnections(const QtSerializerWrapper& reader) {
             this, SLOT(reloadModel()));
 
     connect(m_itemModel, SIGNAL(sendTrashRequest(QtItemWrapper)),
-            &reader, SLOT(trash(QtItemWrapper)));
+            &serializer, SLOT(trash(QtItemWrapper)));
+
+    connect(m_itemModel, SIGNAL(sendUpdateRequest(QtItemWrapper)),
+            &serializer, SLOT(write(QtItemWrapper)));
 
     // Request a read from this class...
     connect(this, SIGNAL(sendQueryRequest(QStringList)),
-            &reader, SLOT(read(QStringList)));
+            &serializer, SLOT(read(QStringList)));
 
     // ...but hanlde the request in the ItemModel
-    connect(&reader, SIGNAL(readCompleted(QVector<QtItemWrapper*>)),
+    connect(&serializer, SIGNAL(readCompleted(QVector<QtItemWrapper*>)),
             m_itemModel, SLOT(resetWith(QVector<QtItemWrapper*>)));
 
     // Content notes updating
-    connect(m_itemView, SIGNAL(clicked(QModelIndex)),
-            this, SLOT(updateNotes(QModelIndex)));
+    connect(m_itemView->selectionModel(), SIGNAL(currentChanged(QModelIndex,
+                                                                QModelIndex)),
+            this, SLOT(updateNotes(QModelIndex, QModelIndex)));
+
+    connect(this, SIGNAL(notesChanged(QModelIndex,QString)),
+            m_itemModel, SLOT(updateNotes(QModelIndex,QString)));
 }
 
 //------------------------------------------------------------------------------
@@ -140,13 +155,29 @@ void RecallView::updateItemSet(const QString& tag) {
 }
 
 //------------------------------------------------------------------------------
-// Update the notes displayed with those of the selected item
+// Notify if the previous item's notes were changed and update the notes
+// displayed with those of the selected item.
 //------------------------------------------------------------------------------
-void RecallView::updateNotes(const QModelIndex& index) {
-    if (index.isValid()) {
-        const QtItemWrapper* item = m_itemModel->itemAt(index);
+void RecallView::updateNotes(const QModelIndex& current,
+                             const QModelIndex& previous) {
+
+    if (itemNotesChanged) {
+        emit notesChanged(previous, m_contentEdit->toPlainText());
+        itemNotesChanged = false;
+    }
+    if (current.isValid()) {
+        const QtItemWrapper* item = m_itemModel->itemAt(current);
         if (item) {
+
+            // QPlainTextEdit doesn't have a signal that ignores
+            // programmatic edits, so we have to do this.
+            disconnect(m_contentEdit, SIGNAL(textChanged()),
+                       this, SLOT(notesChanged()));
+
             m_contentEdit->setPlainText(item->content);
+
+            connect(m_contentEdit, SIGNAL(textChanged()),
+                    this, SLOT(notesChanged()));
         }
     }
 }
@@ -163,6 +194,15 @@ void RecallView::reloadModel() {
 //------------------------------------------------------------------------------
 void RecallView::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Escape) {
+        if (m_itemModel->hasEdits() &&
+            QMessageBox::warning(
+                this,  "Recap",
+                tr("Changes have made and will be lost if you choose to "
+                   "continue. Are you sure you want to exit?"),
+                QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
+
+            return;
+        }
         close();
     }
 }
@@ -170,4 +210,9 @@ void RecallView::keyPressEvent(QKeyEvent* event) {
 //------------------------------------------------------------------------------
 void RecallView::trashItem() {
     m_itemModel->trashItem(m_itemView->currentIndex());
+}
+
+//------------------------------------------------------------------------------
+void RecallView::notesChanged() {
+    itemNotesChanged = true;
 }

@@ -29,19 +29,28 @@ class RecallView : public QMainWindow {
         //		  The wrapped serializer required to perform all item queries.
         // @post  The Ui is ready to be displayed via a call to show().
         //----------------------------------------------------------------------
-        RecallView(const QtSerializerWrapper &reader,
+        RecallView(const QtSerializerWrapper &serializer,
                    QWidget *parent = 0);
 
         ~RecallView();
 
     signals:
+        //----------------------------------------------------------------------
+        // Emitted directly to QtSerializerWrapper to request a read query.
+        //----------------------------------------------------------------------
         void sendQueryRequest(const QStringList& tags);
+
+        //----------------------------------------------------------------------
+        // Emitted to ItemModel to notify when an item's notes have been edited.
+        //----------------------------------------------------------------------
+        void notesChanged(const QModelIndex&, const QString text);
 
     private slots:
         void updateItemSet(const QString& tag);
-        void updateNotes(const QModelIndex&);
+        void updateNotes(const QModelIndex&, const QModelIndex&);
         void trashItem();
         void reloadModel();
+        void notesChanged();
 
     private:
         void initGui(const QtSerializerWrapper&);
@@ -55,5 +64,7 @@ class RecallView : public QMainWindow {
         QPlainTextEdit*	 m_contentEdit;
         QToolBar*		 m_toolbar;
         QStringList   	 m_tags;
+
+        bool			 itemNotesChanged;
 };
 #endif // RECALLVIEW_H

@@ -23,19 +23,37 @@ ItemModel::~ItemModel() {
 //------------------------------------------------------------------------------
 void ItemModel::deleteItems() {
     foreach (QtItemWrapper* i, m_items) {
-        if (i) {
+        if (i && !m_editMap.contains(i->id)) {
             delete i;
             i = 0;
         }
     }
+    m_items.clear();
+}
+
+//------------------------------------------------------------------------------
+void ItemModel::deleteEditMap() {
+    foreach (QtItemWrapper* i, m_editMap) {
+        if (i && !m_items.contains(i)) {
+            delete i;
+            i = 0;
+        }
+    }
+    m_editMap.clear();
 }
 
 //------------------------------------------------------------------------------
 void ItemModel::resetWith(const QVector<QtItemWrapper*>& items) {
+
+    // Keep items that have been edited
+    foreach(QtItemWrapper* i, items) {
+        if (m_editMap.contains(i->id)) {
+            *i = *m_editMap[i->id];
+        }
+    }
     if (!m_items.empty()) {
         beginRemoveRows(QModelIndex(), 0, m_items.size() - 1);
         deleteItems();
-        m_items.clear();
         endRemoveRows();
     }
     beginInsertRows(QModelIndex(), 0, 0);
@@ -83,11 +101,39 @@ QVariant ItemModel::data(const QModelIndex &index, int role) const {
     return QVariant();
 }
 
+//------------------------------------------------------------------------------
+bool ItemModel::setData(const QModelIndex &index,
+                        const QVariant &value, int role) {
+
+    QString valueStr = value.toString();
+
+    if (index.isValid() && role == Qt::EditRole && !valueStr.isEmpty()) {
+
+        int row = index.row(), col = index.column();
+        if (row < m_items.size()) {
+            QtItemWrapper* item = m_items[row];
+
+            if (col == 0) {
+                m_items[row]->title = valueStr;
+                m_editMap.insert(item->id, item);
+            }
+            else if (col == 1) {
+                QString tagstring  = valueStr;
+                m_items[row]->tags = tagstring.split(TagLineEdit::TagSeparator,
+                                                     QString::SkipEmptyParts);
+                m_editMap.insert(item->id, item);
+            }
+        }
+    }
+    return false;
+}
 
 //------------------------------------------------------------------------------
 Qt::ItemFlags ItemModel::flags(const QModelIndex &index) const {
 
-    return index.isValid() ? QAbstractItemModel::flags(index) : Qt::NoItemFlags;
+    return index.isValid() ? Qt::ItemIsEnabled    |
+                             Qt::ItemIsSelectable |
+                             Qt::ItemIsEditable   : Qt::NoItemFlags;
 }
 
 //------------------------------------------------------------------------------
@@ -107,5 +153,29 @@ void ItemModel::trashItem(const QModelIndex &index) {
         m_items.remove(row);
         emit sendTrashRequest(*item);
         endRemoveRows();
+    }
+}
+
+//------------------------------------------------------------------------------
+void ItemModel::updateNotes(const QModelIndex &index, const QString &notes) {
+    QtItemWrapper* item = itemAt(index);
+    if (item) {
+        item->content = notes;
+        m_editMap.insert(item->id, item);
+    }
+}
+
+//------------------------------------------------------------------------------
+bool ItemModel::hasEdits() const {
+    return !m_editMap.empty();
+}
+
+//------------------------------------------------------------------------------
+void ItemModel::saveItems() {
+    if (hasEdits()) {
+        foreach(QtItemWrapper* i, m_editMap) {
+            emit sendUpdateRequest(*i);
+        }
+        deleteEditMap();
     }
 }
