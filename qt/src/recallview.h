@@ -13,6 +13,8 @@ class QPushButton;
 class QPlainTextEdit;
 class QtItemWrapper;
 class QtSerializerWrapper;
+class QDockWidget;
+class QToolBar;
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -55,7 +57,8 @@ class RecallView : public QMainWindow {
     private:
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
-        void keyPressEvent(QKeyEvent *);
+        void keyPressEvent(QKeyEvent*);
+        void closeEvent(QCloseEvent*);
 
         ItemModel*   	 m_itemModel;
         QTreeView*   	 m_itemView;
@@ -64,6 +67,7 @@ class RecallView : public QMainWindow {
         QPlainTextEdit*	 m_contentEdit;
         QToolBar*		 m_toolbar;
         QStringList   	 m_tags;
+        QDockWidget* 	 m_tagListDock;
 
         bool			 itemNotesChanged;
 };

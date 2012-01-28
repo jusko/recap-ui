@@ -17,8 +17,9 @@
 // Configuration constants
 // TODO: Replace with config file
 //------------------------------------------------------------------------------
-const QString RECAP_HOME = QDir::homePath() + "/.recap";
-const QString RECAP_DB   = RECAP_HOME + "/recap.sqlite3";
+const QString RecapApp::HomeDirectory = QDir::homePath() + "/.recap";
+const QString RecapApp::ConfFile = RecapApp::HomeDirectory + "/recap.conf";
+const QString RECAP_DB = RecapApp::HomeDirectory + "/recap.sqlite3";
 
 //------------------------------------------------------------------------------
 // Command line option helpers
@@ -67,11 +68,11 @@ RecapApp::RecapApp(int& argc, char** argv)
     //---
 
     // Create home directory
-    QDir homeDir(RECAP_HOME);
+    QDir homeDir(HomeDirectory);
     if (!homeDir.exists()) {
-        if (!homeDir.mkpath(RECAP_HOME)) {
+        if (!homeDir.mkpath(HomeDirectory)) {
             throw std::runtime_error(
-                QString(tr("Failed to create ")).append(RECAP_HOME).toStdString()
+                QString(tr("Failed to create ")).append(HomeDirectory).toStdString()
             );
         }
     }

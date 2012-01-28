@@ -102,6 +102,8 @@ QVariant ItemModel::data(const QModelIndex &index, int role) const {
 }
 
 //------------------------------------------------------------------------------
+// TODO: Retain original text initially on edit (esp. tags).
+//		 add date to column 3
 bool ItemModel::setData(const QModelIndex &index,
                         const QVariant &value, int role) {
 

@@ -3,7 +3,9 @@
 #include "taglineedit.h"
 #include "qtserializerwrapper.h"
 #include "itemmodel.h"
+#include "recapapp.h"
 //------------------------------------------------------------------------------
+#include <QSettings>
 #include <QComboBox>
 #include <QPushButton>
 #include <QGridLayout>
@@ -32,7 +34,8 @@ RecallView::RecallView(const QtSerializerWrapper& serializer,
       m_contentEdit(0),
       m_toolbar(0),
       m_tags(serializer.tags()),
-      itemNotesChanged(false) {
+      itemNotesChanged(false),
+      m_tagListDock(0) {
 
     initGui(serializer);
     setConnections(serializer);
@@ -54,7 +57,8 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
       setGeometry(0, 0, 800, 600);
 
       // Toolbar
-      QToolBar* m_toolbar = new QToolBar;
+      m_toolbar = new QToolBar;
+      m_toolbar->setObjectName("toolbar");
       m_toolbar->setMovable(true);
       m_toolbar->addAction(
           QCommonStyle().standardIcon(QCommonStyle::SP_TrashIcon),
@@ -71,12 +75,13 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
       addToolBar(Qt::LeftToolBarArea, m_toolbar);
 
       // Left Dock
-      QDockWidget* tagListControl = new QDockWidget;
-      tagListControl->setFeatures(QDockWidget::DockWidgetMovable);
-      addDockWidget(Qt::LeftDockWidgetArea, tagListControl);
+      m_tagListDock = new QDockWidget;
+      m_tagListDock->setObjectName("tagListDock");
+      m_tagListDock->setFeatures(QDockWidget::DockWidgetMovable);
+      addDockWidget(Qt::LeftDockWidgetArea, m_tagListDock);
       QWidget* dockChildWidget = new QWidget;
       QGridLayout* l_layout = new QGridLayout(dockChildWidget);
-      tagListControl->setWidget(dockChildWidget);
+      m_tagListDock->setWidget(dockChildWidget);
 
       // Tag edit
       QLabel* tagEditLabel = new QLabel(tr("T&ags"));
@@ -108,6 +113,13 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
       m_contentEdit->setTabStopWidth(8);
       r_layout->addWidget(m_contentEdit, 1, 0);
       notesLabel->setBuddy(m_contentEdit);
+
+      // Restore settings
+      QSettings conf(RecapApp::ConfFile, QSettings::NativeFormat);
+      conf.beginGroup("RecallView");
+      restoreGeometry(conf.value("geometry").toByteArray());
+      restoreState(conf.value("state").toByteArray());
+      conf.endGroup();
 }
 
 //------------------------------------------------------------------------------
@@ -216,3 +228,17 @@ void RecallView::trashItem() {
 void RecallView::notesChanged() {
     itemNotesChanged = true;
 }
+
+//------------------------------------------------------------------------------
+// Save the Ui state when exiting so that it can be restored next time.
+//------------------------------------------------------------------------------
+void RecallView::closeEvent(QCloseEvent* event) {
+
+    QSettings conf(RecapApp::ConfFile, QSettings::NativeFormat);
+    conf.beginGroup("RecallView");
+    conf.setValue("geometry", saveGeometry());
+    conf.setValue("state", saveState());
+    conf.endGroup();
+    QMainWindow::closeEvent(event);
+}
+

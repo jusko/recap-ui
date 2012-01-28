@@ -33,6 +33,9 @@ class RecapApp : public QApplication {
 
         ~RecapApp();
 
+        static const QString HomeDirectory;
+        static const QString ConfFile;
+
     private:
         QtSerializerWrapper* m_serializerWrapper;
         CaptureForm*         m_captureForm;
