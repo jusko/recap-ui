@@ -10,7 +10,8 @@ Pre-pre Alpha ;)
                  +rich text controls
    - Improve DB
            - [X] Case insensitive queries
-           - [ ] Create trigger to trash items
+           - [-] Create trigger to trash items
+                Not just yet. It's working fine as is.
            - [ ] Create indexes for heavy load queries
            - [ ] Create trash view
            - [X] Timestamp entries

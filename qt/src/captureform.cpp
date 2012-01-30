@@ -84,7 +84,7 @@ void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     gl->addWidget((m_tagsEdit = new TagLineEdit(writer.tags())), 1, 1);
     tagsLabel->setBuddy(m_tagsEdit);
 
-    gl->addWidget((m_tagsBox = new QComboBox), 1, 2);
+    gl->addWidget((m_tagsBox = new QComboBox), 1, 3);
     m_tagsBox->addItems(writer.tags());
 
     // Content

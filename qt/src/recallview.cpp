@@ -34,8 +34,8 @@ RecallView::RecallView(const QtSerializerWrapper& serializer,
       m_contentEdit(0),
       m_toolbar(0),
       m_tags(serializer.tags()),
-      itemNotesChanged(false),
-      m_tagListDock(0) {
+      m_tagListDock(0),
+      itemNotesChanged(false) {
 
     initGui(serializer);
     setConnections(serializer);

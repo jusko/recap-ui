@@ -4,6 +4,7 @@
 #include <QLineEdit>
 //------------------------------------------------------------------------------
 class TagCompleter;
+class QToolButton;
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -56,10 +57,15 @@ class TagLineEdit : public QLineEdit {
         //---------------------------------------------------------------------
         bool addTag(const QString& tag);
 
+    protected:
+        void resizeEvent(QResizeEvent*);
+
     private:
         TagCompleter* m_tagCompleter;
+        QToolButton*  m_clearButton;
 
     private slots:
         void complete(const QString& tag);
+        void updateClearButton(const QString& text);
 };
 #endif // TAGLINEEDIT_H
