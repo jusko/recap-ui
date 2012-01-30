@@ -82,7 +82,7 @@ TagLineEdit::TagLineEdit(const QStringList &tags, QWidget *parent)
     m_tagCompleter->setWidget(this);
 
     m_clearButton = new QToolButton(this);
-    QPixmap pixmap("res/img/clear-button.png");
+    QPixmap pixmap(":/img/clear-button.png");
     m_clearButton->setIcon(QIcon(pixmap));
     m_clearButton->setIconSize(pixmap.size());
     m_clearButton->setCursor(Qt::ArrowCursor);

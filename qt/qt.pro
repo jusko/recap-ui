@@ -22,3 +22,6 @@ OTHER_FILES += TODO
 LIBS += -Llib/ -lrecapcore
 
 TARGET = recap-ui-qt
+
+RESOURCES += \
+    res/resources.qrc
