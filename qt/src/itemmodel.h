@@ -34,7 +34,13 @@ class ItemModel : public QAbstractListModel {
         //---------------------------------------------------------------------
         bool hasEdits() const;
 
-        ItemModel(QObject *parent = 0);
+        //---------------------------------------------------------------------
+        // Initialise model
+        // @post All items are loaded into the model via the serializer
+        //       All slots are connected for further serialization and
+        //		 deserialization
+        //---------------------------------------------------------------------
+        ItemModel(const QtSerializerWrapper& serializer, QObject *parent = 0);
 
         ~ItemModel();
 
@@ -93,6 +99,8 @@ class ItemModel : public QAbstractListModel {
     signals:
         void sendTrashRequest(const QtItemWrapper&);
         void sendUpdateRequest(const QtItemWrapper&);
+        void itemEdited(bool);
+        void itemsSaved(bool);
 
     private:
         void deleteItems();

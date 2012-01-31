@@ -20,6 +20,7 @@
 #include <QList>
 #include <QToolBar>
 #include <QMessageBox>
+#include <QAction>
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -28,15 +29,17 @@
 RecallView::RecallView(const QtSerializerWrapper& serializer,
                        QWidget *parent)
     : QMainWindow(parent),
-      m_itemModel(new ItemModel),
+      m_itemModel(new ItemModel(serializer, this)),
       m_itemView(0),
       m_tagsEdit(0),
-      m_tagsBox(0),
+//      m_tagsBox(0),
       m_contentEdit(0),
       m_toolbar(0),
       m_tags(serializer.tags()),
       m_tagListDock(0),
       m_itemSFProxy(0),
+      m_trashAction(0),
+      m_saveAction(0),
       itemNotesChanged(false) {
 
     initGui(serializer);
@@ -44,16 +47,7 @@ RecallView::RecallView(const QtSerializerWrapper& serializer,
 }
 
 //------------------------------------------------------------------------------
-// Dtor
-//------------------------------------------------------------------------------
-RecallView::~RecallView() {
-    if (m_itemModel) {
-        delete m_itemModel;
-        m_itemModel = 0;
-    }
-}
-
-//------------------------------------------------------------------------------
+// TODO: Refactor long method
 void RecallView::initGui(const QtSerializerWrapper& serializer) {
       setWindowTitle(tr("Recap - Recall Mode"));
       setGeometry(0, 0, 800, 600);
@@ -62,18 +56,27 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
       m_toolbar = new QToolBar;
       m_toolbar->setObjectName("toolbar");
       m_toolbar->setMovable(true);
-      m_toolbar->addAction(
+      m_trashAction = m_toolbar->addAction(
           QCommonStyle().standardIcon(QCommonStyle::SP_TrashIcon),
           "Trash the selected item.",
           this,
           SLOT(trashItem())
       );
-      m_toolbar->addAction(
+      m_trashAction->setDisabled(true);
+
+      m_saveAction = m_toolbar->addAction(
           QCommonStyle().standardIcon(QCommonStyle::SP_DialogSaveButton),
           "Save changes",
           m_itemModel,
           SLOT(saveItems())
       );
+      m_saveAction->setEnabled(false);
+      connect(m_itemModel,  SIGNAL(itemEdited(bool)),
+              m_saveAction, SLOT(setEnabled(bool)));
+
+      connect(m_itemModel,  SIGNAL(itemsSaved(bool)),
+              m_saveAction, SLOT(setDisabled(bool)));
+
       addToolBar(Qt::LeftToolBarArea, m_toolbar);
 
       // Left Dock
@@ -86,19 +89,16 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
       m_tagListDock->setWidget(dockChildWidget);
 
       // Tag edit
-      QLabel* tagEditLabel = new QLabel(tr("T&ags"));
+      QLabel* tagEditLabel = new QLabel(tr("&Search"));
       l_layout->addWidget(tagEditLabel, 0, 0);
       m_tagsEdit = new TagLineEdit(serializer.tags(), this);
       l_layout->addWidget(m_tagsEdit, 0, 1);
       tagEditLabel->setBuddy(m_tagsEdit);
 
       // Tag box
-      m_tagsBox = new QComboBox;
-      m_tagsBox->addItems(serializer.tags());
-      l_layout->addWidget(m_tagsBox, 0, 3);
-
-      // Model/View
-      m_itemModel->resetWith(serializer.items());
+//      m_tagsBox = new QComboBox;
+//      m_tagsBox->addItems(serializer.tags());
+//      l_layout->addWidget(m_tagsBox, 0, 3);
 
       m_itemView = new QTreeView;
       m_itemView->setRootIsDecorated(false);
@@ -137,45 +137,14 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
 //------------------------------------------------------------------------------
 void RecallView::setConnections(const QtSerializerWrapper& serializer) {
 
-    // Tag updates
-    connect(m_tagsBox, SIGNAL(activated(QString)),
-            this, SLOT(updateItemSet(QString)));
-
     // Model updating
     connect(m_tagsEdit, SIGNAL(textChanged(QString)),
             m_itemSFProxy, SLOT(setFilterRegExp(QString)));
-
-    connect(m_itemModel, SIGNAL(sendTrashRequest(QtItemWrapper)),
-            &serializer, SLOT(trash(QtItemWrapper)));
-
-    connect(m_itemModel, SIGNAL(sendUpdateRequest(QtItemWrapper)),
-            &serializer, SLOT(write(QtItemWrapper)));
-
-    // Request a read from this class...
-    connect(this, SIGNAL(sendQueryRequest(QStringList)),
-            &serializer, SLOT(read(QStringList)));
-
-    // ...but hanlde the request in the ItemModel
-    connect(&serializer, SIGNAL(readCompleted(QVector<QtItemWrapper*>)),
-            m_itemModel, SLOT(resetWith(QVector<QtItemWrapper*>)));
 
     // Content notes updating
     connect(m_itemView->selectionModel(), SIGNAL(currentChanged(QModelIndex,
                                                                 QModelIndex)),
             this, SLOT(updateNotes(QModelIndex, QModelIndex)));
-
-    connect(this, SIGNAL(notesChanged(QModelIndex,QString)),
-            m_itemModel, SLOT(updateNotes(QModelIndex,QString)));
-}
-
-//------------------------------------------------------------------------------
-// Add a new tag to the line edit when combo box selection is made, and
-// reload the items displayed accordingly.
-//------------------------------------------------------------------------------
-void RecallView::updateItemSet(const QString& tag) {
-    if (m_tagsEdit->addTag(tag)) {
-        reloadModel();
-    }
 }
 
 //------------------------------------------------------------------------------
@@ -185,12 +154,10 @@ void RecallView::updateItemSet(const QString& tag) {
 void RecallView::updateNotes(const QModelIndex& current,
                              const QModelIndex& previous) {
 
-    if (itemNotesChanged) {
-        emit notesChanged(previous, m_contentEdit->toPlainText());
-        itemNotesChanged = false;
-    }
     if (current.isValid()) {
-        const QtItemWrapper* item = m_itemModel->itemAt(current);
+        const QtItemWrapper* item = m_itemModel->itemAt(
+            m_itemSFProxy->mapToSource(current)
+        );
         if (item) {
 
             // QPlainTextEdit doesn't have a signal that ignores
@@ -202,17 +169,12 @@ void RecallView::updateNotes(const QModelIndex& current,
 
             connect(m_contentEdit, SIGNAL(textChanged()),
                     this, SLOT(notesChanged()));
+
+            m_trashAction->setEnabled(true);
+            return;
         }
     }
-}
-
-//------------------------------------------------------------------------------
-void RecallView::reloadModel() {
-    QStringList tags = m_tagsEdit->text().split(TagLineEdit::TagSeparator,
-                                                QString::SkipEmptyParts);
-
-    // Show all items if no tags are entered
-    emit sendQueryRequest(tags.isEmpty() ? m_tags : tags);
+    m_trashAction->setDisabled(true);
 }
 
 //------------------------------------------------------------------------------
@@ -233,12 +195,20 @@ void RecallView::keyPressEvent(QKeyEvent* event) {
 
 //------------------------------------------------------------------------------
 void RecallView::trashItem() {
-    m_itemModel->trashItem(m_itemView->currentIndex());
+    m_itemModel->trashItem(
+        m_itemSFProxy->mapToSource(m_itemView->currentIndex())
+    );
 }
 
 //------------------------------------------------------------------------------
 void RecallView::notesChanged() {
-    itemNotesChanged = true;
+    m_itemModel->updateNotes(
+        m_itemSFProxy->mapToSource(
+            m_itemView->selectionModel()->currentIndex()
+        ),
+        m_contentEdit->toPlainText()
+    );
+    m_saveAction->setEnabled(true);
 }
 
 //------------------------------------------------------------------------------

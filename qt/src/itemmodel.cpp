@@ -9,8 +9,19 @@
 //------------------------------------------------------------------------------
 // Ctor
 //------------------------------------------------------------------------------
-ItemModel::ItemModel(QObject *parent) :
-    QAbstractListModel(parent) {
+ItemModel::ItemModel(const QtSerializerWrapper& serializer, QObject *parent)
+    : QAbstractListModel(parent) {
+
+    resetWith(serializer.items());
+
+    connect(this, SIGNAL(sendTrashRequest(QtItemWrapper)),
+            &serializer, SLOT(trash(QtItemWrapper)));
+
+    connect(this, SIGNAL(sendUpdateRequest(QtItemWrapper)),
+            &serializer, SLOT(write(QtItemWrapper)));
+
+    connect(&serializer, SIGNAL(readCompleted(QVector<QtItemWrapper*>)),
+            this, SLOT(resetWith(QVector<QtItemWrapper*>)));
 }
 
 //------------------------------------------------------------------------------
@@ -118,12 +129,16 @@ bool ItemModel::setData(const QModelIndex &index,
             if (col == 0) {
                 m_items[row]->title = valueStr;
                 m_editMap.insert(item->id, item);
+                emit itemEdited(true);
+                return true;
             }
             else if (col == 1) {
                 QString tagstring  = valueStr;
                 m_items[row]->tags = tagstring.split(TagLineEdit::TagSeparator,
                                                      QString::SkipEmptyParts);
                 m_editMap.insert(item->id, item);
+                emit itemEdited(true);
+                return true;
             }
         }
     }
@@ -161,9 +176,10 @@ void ItemModel::trashItem(const QModelIndex &index) {
 //------------------------------------------------------------------------------
 void ItemModel::updateNotes(const QModelIndex &index, const QString &notes) {
     QtItemWrapper* item = itemAt(index);
-    if (item) {
+    if (item && item->content != notes) {
         item->content = notes;
         m_editMap.insert(item->id, item);
+        emit itemEdited(true);
     }
 }
 
@@ -179,5 +195,6 @@ void ItemModel::saveItems() {
             emit sendUpdateRequest(*i);
         }
         deleteEditMap();
+        emit itemsSaved(true);
     }
 }

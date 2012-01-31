@@ -13,23 +13,30 @@ Pre-pre Alpha ;)
            - [-] Create trigger to trash items
                 Not just yet. It's working fine as is.
            - [ ] Create indexes for heavy load queries
-           - [ ] Create trash view
+           - [ ] Create trash/restore view
            - [X] Timestamp entries
-   - [ ] Improve tag filtering through Ui
-   - [ ] Add query clear button
+   - [X] Improve tag filtering through Ui
+   - [X] Add query clear button
    - [-] Run capture in thread to fake more efficiency
         -> Since wrapping up in a transaction it is no longer an issue
    - [ ] Trap potential errors in read/write interface and propogate
                  errors to log and notify via a message box.
    - [X] Modify recall mode to allow item editing.
-   - [ ] Modify query-by-tag request not to:
-         - [ ] requery with the same tags as the previous query
+   - [X] Modify query-by-tag request not to:
+         - [-] requery with the same tags as the previous query
+                Not hitting DB anymore with SFProxy
          - [X] replace edited items with data from the query
 
    - [X] Ensure transaction safety
    - [X] Tag box needs to only show a set number of tags and be scrollable
    - [X] Save previous window geometry settings
    - [ ] Encrypted entries
+   - [-] Internote links
+        + Deferred to qorg component
+   - [ ] Revise tag filtering in recallview
+     + [ ] Use a tag checkbox list to filter tags separately to the search
+     + [ ] Implement improved autocompleter for the search line edit
+   - [ ] Create readme and install files
 
 Evaluate use case for service
 ------------------------------

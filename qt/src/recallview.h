@@ -16,6 +16,7 @@ class QtSerializerWrapper;
 class QDockWidget;
 class QToolBar;
 class ItemSortFilterProxyModel;
+class QAction;
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -35,8 +36,6 @@ class RecallView : public QMainWindow {
         RecallView(const QtSerializerWrapper &serializer,
                    QWidget *parent = 0);
 
-        ~RecallView();
-
     signals:
         //----------------------------------------------------------------------
         // Emitted directly to QtSerializerWrapper to request a read query.
@@ -44,15 +43,13 @@ class RecallView : public QMainWindow {
         void sendQueryRequest(const QStringList& tags);
 
         //----------------------------------------------------------------------
-        // Emitted to ItemModel to notify when an item's notes have been edited.
+        // Emitted to ItemModel to notify when an item's notes are edited.
         //----------------------------------------------------------------------
         void notesChanged(const QModelIndex&, const QString text);
 
     private slots:
-        void updateItemSet(const QString& tag);
         void updateNotes(const QModelIndex&, const QModelIndex&);
         void trashItem();
-        void reloadModel();
         void notesChanged();
         void setRegexp(const QString&);
 
@@ -65,12 +62,14 @@ class RecallView : public QMainWindow {
         ItemModel*   	 		  m_itemModel;
         QTreeView*   	 		  m_itemView;
         TagLineEdit* 	 		  m_tagsEdit;
-        QComboBox*   	 		  m_tagsBox;
+//        QComboBox*   	 		  m_tagsBox;
         QPlainTextEdit*	 		  m_contentEdit;
         QToolBar*		 		  m_toolbar;
         QStringList   	 		  m_tags;
         QDockWidget* 	 		  m_tagListDock;
         ItemSortFilterProxyModel* m_itemSFProxy;
+        QAction*				  m_trashAction;
+        QAction*				  m_saveAction;
 
         bool			 itemNotesChanged;
 };
