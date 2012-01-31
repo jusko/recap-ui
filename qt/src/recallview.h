@@ -15,6 +15,7 @@ class QtItemWrapper;
 class QtSerializerWrapper;
 class QDockWidget;
 class QToolBar;
+class ItemSortFilterProxyModel;
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -53,6 +54,7 @@ class RecallView : public QMainWindow {
         void trashItem();
         void reloadModel();
         void notesChanged();
+        void setRegexp(const QString&);
 
     private:
         void initGui(const QtSerializerWrapper&);
@@ -60,14 +62,15 @@ class RecallView : public QMainWindow {
         void keyPressEvent(QKeyEvent*);
         void closeEvent(QCloseEvent*);
 
-        ItemModel*   	 m_itemModel;
-        QTreeView*   	 m_itemView;
-        TagLineEdit* 	 m_tagsEdit;
-        QComboBox*   	 m_tagsBox;
-        QPlainTextEdit*	 m_contentEdit;
-        QToolBar*		 m_toolbar;
-        QStringList   	 m_tags;
-        QDockWidget* 	 m_tagListDock;
+        ItemModel*   	 		  m_itemModel;
+        QTreeView*   	 		  m_itemView;
+        TagLineEdit* 	 		  m_tagsEdit;
+        QComboBox*   	 		  m_tagsBox;
+        QPlainTextEdit*	 		  m_contentEdit;
+        QToolBar*		 		  m_toolbar;
+        QStringList   	 		  m_tags;
+        QDockWidget* 	 		  m_tagListDock;
+        ItemSortFilterProxyModel* m_itemSFProxy;
 
         bool			 itemNotesChanged;
 };

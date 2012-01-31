@@ -4,7 +4,8 @@ HEADERS += \
     src/recallview.h \
     src/itemmodel.h \
     src/qtserializerwrapper.h \
-    src/recapapp.h
+    src/recapapp.h \
+    src/itemsortfilterproxymodel.h
 
 SOURCES += \
     src/captureform.cpp \
@@ -13,7 +14,8 @@ SOURCES += \
     src/recallview.cpp \
     src/itemmodel.cpp \
     src/qtserializerwrapper.cpp \
-    src/recapapp.cpp
+    src/recapapp.cpp \
+    src/itemsortfilterproxymodel.cpp
 
 INCLUDEPATH += include/ src/
 

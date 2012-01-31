@@ -25,7 +25,7 @@ class TagCompleter : public QCompleter {
         // readjusts the current completion prefix.
         void setTagCompletion(const QString& text) {
 
-            // TODO: - Removing tags from the model works only after the second ',' => fix
+            // TODO: - Removing tags from the model works only after the second ' ' => fix
             //		 - Modifiy to rebuild model tags when text is deleted => currently once they're removed they never come back
             if (text.contains(TagLineEdit::TagSeparator)) {
 
@@ -82,7 +82,7 @@ TagLineEdit::TagLineEdit(const QStringList &tags, QWidget *parent)
     m_tagCompleter->setWidget(this);
 
     m_clearButton = new QToolButton(this);
-    QPixmap pixmap(":/img/clear-button.png");
+    QPixmap pixmap(":img/clear-button.png");
     m_clearButton->setIcon(QIcon(pixmap));
     m_clearButton->setIconSize(pixmap.size());
     m_clearButton->setCursor(Qt::ArrowCursor);

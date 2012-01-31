@@ -4,6 +4,7 @@
 #include "qtserializerwrapper.h"
 #include "itemmodel.h"
 #include "recapapp.h"
+#include "itemsortfilterproxymodel.h"
 //------------------------------------------------------------------------------
 #include <QSettings>
 #include <QComboBox>
@@ -35,6 +36,7 @@ RecallView::RecallView(const QtSerializerWrapper& serializer,
       m_toolbar(0),
       m_tags(serializer.tags()),
       m_tagListDock(0),
+      m_itemSFProxy(0),
       itemNotesChanged(false) {
 
     initGui(serializer);
@@ -95,12 +97,22 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
       m_tagsBox->addItems(serializer.tags());
       l_layout->addWidget(m_tagsBox, 0, 3);
 
-      // Item list
+      // Model/View
       m_itemModel->resetWith(serializer.items());
 
       m_itemView = new QTreeView;
       m_itemView->setRootIsDecorated(false);
-      m_itemView->setModel(m_itemModel);
+      m_itemView->setAlternatingRowColors(true);
+      m_itemView->setSortingEnabled(true);
+
+      m_itemSFProxy = new ItemSortFilterProxyModel(this);
+      m_itemSFProxy->setDynamicSortFilter(true);
+      m_itemSFProxy->setSourceModel(m_itemModel);
+      m_itemSFProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+
+      m_itemView->setModel(m_itemSFProxy);
+      m_itemView->resizeColumnToContents(0);
+
       l_layout->addWidget(m_itemView, 1, 0, 1, 4);
 
       // Content notes
@@ -130,8 +142,8 @@ void RecallView::setConnections(const QtSerializerWrapper& serializer) {
             this, SLOT(updateItemSet(QString)));
 
     // Model updating
-    connect(m_tagsEdit, SIGNAL(editingFinished()),
-            this, SLOT(reloadModel()));
+    connect(m_tagsEdit, SIGNAL(textChanged(QString)),
+            m_itemSFProxy, SLOT(setFilterRegExp(QString)));
 
     connect(m_itemModel, SIGNAL(sendTrashRequest(QtItemWrapper)),
             &serializer, SLOT(trash(QtItemWrapper)));
@@ -242,3 +254,11 @@ void RecallView::closeEvent(QCloseEvent* event) {
     QMainWindow::closeEvent(event);
 }
 
+//------------------------------------------------------------------------------
+// Set the filter proxy with a regexp to match any title or tag with the
+// text entered in the search bar.
+//------------------------------------------------------------------------------
+void RecallView::setRegexp(const QString& text) {
+
+    m_itemSFProxy->setFilterRegExp(QRegExp(text, Qt::CaseInsensitive, QRegExp::FixedString));
+}
