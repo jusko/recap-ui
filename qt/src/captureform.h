@@ -10,6 +10,7 @@ class QComboBox;
 class QPlainTextEdit;
 class TagLineEdit;
 class QKeyEvent;
+class QCheckBox;
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -29,19 +30,13 @@ class CaptureForm : public QDialog {
         CaptureForm(const QtSerializerWrapper& writer,
                     QWidget *parent = 0);
 
-        //----------------------------------------------------------------------
-        // Displays the capture form with a new or existing item.
-        // @param item
-        //		  The item whose data is to be displayed via the form.
-        //		  A null parameter implies that data for a new item is to be
-        //		  created.
-        // @pre   The item points either to null or a valid item address.
-        // @post  Any changes or new data added via the form is saved if the
-        //		  form is accepted, or abandonded otherwise.
-        //----------------------------------------------------------------------
-        void show(QtItemWrapper *item = 0);
-
         ~CaptureForm();
+
+    public slots:
+        //----------------------------------------------------------------------
+        // Enables or disables encryption features.
+        //----------------------------------------------------------------------
+        void setEncryption(bool enable);
 
     signals:
         //----------------------------------------------------------------------
@@ -65,12 +60,15 @@ class CaptureForm : public QDialog {
         QPlainTextEdit* m_contentEdit;
         QPushButton*    m_okButton;
         QPushButton*    m_cancelButton;
+        QCheckBox* 		m_encryptCheckBox;
 
         void keyPressEvent(QKeyEvent *);
+        void showEvent(QShowEvent *);
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
         void setItem(QtItemWrapper *);
         bool validateForm() const;
         void resetForm();
+        void initCrypto();
 };
 #endif // CAPTUREFORM_H

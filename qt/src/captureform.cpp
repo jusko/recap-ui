@@ -3,6 +3,7 @@
 #include "recap.h"
 #include "taglineedit.h"
 #include "qtserializerwrapper.h"
+#include "cryptomediator.h"
 //------------------------------------------------------------------------------
 #include <QLabel>
 #include <QCommonStyle>
@@ -13,6 +14,8 @@
 #include <QGridLayout>
 #include <QKeyEvent>
 #include <QMessageBox>
+#include <QCheckBox>
+#include <QHBoxLayout>
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -44,16 +47,8 @@ CaptureForm::~CaptureForm() {
 }
 
 //------------------------------------------------------------------------------
-// PRE: m_item has been set with the address of a new item
-//------------------------------------------------------------------------------
-void CaptureForm::show(QtItemWrapper *item) {
-    if (item) {
-        setItem(item);
-    }
-    else if (m_item) {
-        resetForm();
-    }
-    QDialog::show();
+void CaptureForm::showEvent(QShowEvent* ) {
+    initCrypto();
 }
 
 //------------------------------------------------------------------------------
@@ -65,39 +60,51 @@ void CaptureForm::setItem(QtItemWrapper* item) {
 }
 
 //------------------------------------------------------------------------------
-#include <QRegExpValidator>
 void CaptureForm::initGui(const QtSerializerWrapper &writer) {
     setWindowTitle(tr("Recap - Capture Mode"));
     setGeometry(0, 0, 400, 300);
 
     QGridLayout* gl = new QGridLayout(this);
+    QHBoxLayout* line1 = new QHBoxLayout(this);
+    QHBoxLayout* line2 = new QHBoxLayout(this);
 
     // Title
     QLabel* titleLabel = new QLabel(tr("&Title"));
-    gl->addWidget(titleLabel, 0, 0);
-    gl->addWidget((m_titleEdit = new QLineEdit), 0, 1, 1, 3);
+    line1->addWidget(titleLabel);
+    m_titleEdit = new QLineEdit;
+    line1->addWidget(m_titleEdit);
     titleLabel->setBuddy(m_titleEdit);
+    gl->addLayout(line1, 0, 0, 1, 4);
 
     // Tags
     QLabel* tagsLabel = new QLabel(tr("T&ags"));
-    gl->addWidget(tagsLabel, 1, 0);
-    gl->addWidget((m_tagsEdit = new TagLineEdit(writer.tags())), 1, 1);
+    line2->addWidget(tagsLabel);
+    line2->addWidget((m_tagsEdit = new TagLineEdit(writer.tags())));
     tagsLabel->setBuddy(m_tagsEdit);
 
-    gl->addWidget((m_tagsBox = new QComboBox), 1, 3);
+    line2->addWidget((m_tagsBox = new QComboBox));
     m_tagsBox->addItems(writer.tags());
+    gl->addLayout(line2, 1, 0, 1, 4);
 
     // Content
     QLabel* contentLabel = new QLabel(tr("&Notes"));
-    gl->addWidget(contentLabel, 2, 0);
-    gl->addWidget((m_contentEdit = new QPlainTextEdit), 3, 0, 4, 4);
+    gl->addWidget(contentLabel, 3, 0);
+    gl->addWidget((m_contentEdit = new QPlainTextEdit), 4, 0, 4, 4);
     contentLabel->setBuddy(m_contentEdit);
     m_contentEdit->setTabStopWidth(8);
     m_contentEdit->setWhatsThis(tr("Pasted notes can be formatted (html and rich text are both supported). "
                                    "Bullet points can be added by entering the '*' or '-' characters."));
+
+    // Encrypt
+    m_encryptCheckBox = new QCheckBox(tr("&Encrypt"), this);
+    m_encryptCheckBox->setToolTip(tr("The notes of the current item will be encrypted."));
+    gl->addWidget(m_encryptCheckBox, 8, 0);
+    m_encryptCheckBox->setVisible(false);
+    m_encryptCheckBox->setEnabled(false);
+
     // OK/Cancel
-    gl->addWidget((m_okButton = new QPushButton(tr("&Save"))), 7, 2);
-    gl->addWidget((m_cancelButton = new QPushButton(tr("&Cancel"))), 7, 3);
+    gl->addWidget((m_okButton = new QPushButton(tr("&Save"))), 8, 2);
+    gl->addWidget((m_cancelButton = new QPushButton(tr("&Cancel"))), 8, 3);
     m_okButton->setIcon(QCommonStyle().standardIcon(QCommonStyle::SP_DialogOkButton));
     m_cancelButton->setIcon(QCommonStyle().standardIcon(QCommonStyle::SP_DialogCancelButton));
 }
@@ -126,7 +133,6 @@ void CaptureForm::setConnections(const QtSerializerWrapper& writer) {
 
     connect(m_cancelButton, SIGNAL(clicked(bool)),
             this, SLOT(rejectForm(bool)));
-
 }
 
 //------------------------------------------------------------------------------
@@ -135,6 +141,30 @@ void CaptureForm::setConnections(const QtSerializerWrapper& writer) {
 void CaptureForm::acceptForm(bool) {
     if (!validateForm()) {
         return;
+    }
+    CryptoMediator cm;
+    if (cm.gpgEnabled() &&
+        m_encryptCheckBox->isChecked() &&
+        !cm.encrypt(*m_item)) {
+
+        QMessageBox::StandardButton reply =  QMessageBox::critical(
+            this,
+            "Recap",
+            tr("The encryption operation failed (%1).\n\n"
+               "You can opt to save the item unencrypted anyway, discard the "
+               "item or cancel to go back and re-edit it.").arg(cm.lastError()),
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
+        );
+        switch (reply) {
+            case QMessageBox::Save:
+                break;
+            case QMessageBox::Discard:
+                reject();
+                return;
+            case QMessageBox::Cancel:
+            default:
+                return;
+        }
     }
     emit requestWrite(*m_item);
     accept();
@@ -232,4 +262,19 @@ void CaptureForm::keyPressEvent(QKeyEvent* event) {
         return;
     }
     QDialog::keyPressEvent(event);
+}
+
+//------------------------------------------------------------------------------
+void CaptureForm::setEncryption(bool enable) {
+    m_encryptCheckBox->setVisible(enable);
+    m_encryptCheckBox->setEnabled(enable);
+}
+
+//------------------------------------------------------------------------------
+// Initialise the cryptographic engine (which may prompt the user for several
+// choices on the first run) and setup crypto features accordingly.
+//------------------------------------------------------------------------------
+void CaptureForm::initCrypto() {
+    CryptoMediator* cm = new CryptoMediator(this);
+    setEncryption(cm->gpgEnabled());
 }

@@ -5,6 +5,7 @@
 #include "itemmodel.h"
 #include "recapapp.h"
 #include "itemsortfilterproxymodel.h"
+#include "cryptomediator.h"
 //------------------------------------------------------------------------------
 #include <QSettings>
 #include <QComboBox>
@@ -40,6 +41,7 @@ RecallView::RecallView(const QtSerializerWrapper& serializer,
       m_itemSFProxy(0),
       m_trashAction(0),
       m_saveAction(0),
+      m_cryptToggler(0),
       itemNotesChanged(false) {
 
     initGui(serializer);
@@ -58,15 +60,15 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
       m_toolbar->setMovable(true);
       m_trashAction = m_toolbar->addAction(
           QCommonStyle().standardIcon(QCommonStyle::SP_TrashIcon),
-          "Trash the selected item.",
+          tr("Trash the selected item."),
           this,
           SLOT(trashItem())
       );
-      m_trashAction->setDisabled(true);
+      m_trashAction->setEnabled(false);
 
       m_saveAction = m_toolbar->addAction(
           QCommonStyle().standardIcon(QCommonStyle::SP_DialogSaveButton),
-          "Save changes",
+          tr("Save changes"),
           m_itemModel,
           SLOT(saveItems())
       );
@@ -76,6 +78,12 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
 
       connect(m_itemModel,  SIGNAL(itemsSaved(bool)),
               m_saveAction, SLOT(setDisabled(bool)));
+
+      // TODO: Implement crypto toggling
+      // Icon and text toggled depending on item state
+      m_cryptToggler = m_toolbar->addAction("", this, SLOT(toggleCrypt()));
+      m_cryptToggler->setVisible(false);
+      m_cryptToggler->setEnabled(false);
 
       addToolBar(Qt::LeftToolBarArea, m_toolbar);
 
@@ -165,16 +173,60 @@ void RecallView::updateNotes(const QModelIndex& current,
             disconnect(m_contentEdit, SIGNAL(textChanged()),
                        this, SLOT(notesChanged()));
 
-            m_contentEdit->setPlainText(item->content);
+            m_contentEdit->setPlainText(decrypt(item));
 
             connect(m_contentEdit, SIGNAL(textChanged()),
                     this, SLOT(notesChanged()));
 
             m_trashAction->setEnabled(true);
+            m_cryptToggler->setEnabled(true);
             return;
         }
     }
-    m_trashAction->setDisabled(true);
+    m_trashAction->setEnabled(false);
+    m_cryptToggler->setEnabled(false);
+}
+
+//------------------------------------------------------------------------------
+// Attempt to decrypt the item's content if it's encrypted. Password entry
+// is taken care of by pinentry and GPG Agent.
+//
+// @pre  If the item is encrypted and GPG encryption features are enabled.
+//	     If the item is unencrypted, there are no preconditions that bear
+//		 mentioning.
+//
+// @post If the password entry and decryption is successful return the plain
+//		 text.
+//
+//		 If password entry fails, or if the notes are encrypted but GPG features
+//		 are disabled, returns a blank string, disables m_contentEdit and shows
+//	     a lock image.
+//
+//		 If the item is unencrypted, return its contents.
+//------------------------------------------------------------------------------
+QString RecallView::decrypt(const QtItemWrapper* item) {
+    if (!m_contentEdit->isEnabled()) {
+        setLockImage(false);
+        m_contentEdit->setEnabled(true);
+    }
+    if (!item->encrypted) {
+        return item->content;
+    }
+
+    QString plaintext;
+    CryptoMediator cm;
+
+    if (!cm.decrypt(*item, plaintext)) {
+        if (!cm.lastError().isEmpty()) {
+            QMessageBox::critical(
+                this, tr("Recap - Decryption Error"),
+                cm.lastError()
+            );
+        }
+        setLockImage(true);
+        m_contentEdit->setEnabled(false);
+    }
+    return plaintext;
 }
 
 //------------------------------------------------------------------------------
@@ -183,7 +235,7 @@ void RecallView::keyPressEvent(QKeyEvent* event) {
         if (m_itemModel->hasEdits() &&
             QMessageBox::warning(
                 this,  "Recap",
-                tr("Changes have made and will be lost if you choose to "
+                QObject::tr("Changes have made and will be lost if you choose to "
                    "continue. Are you sure you want to exit?"),
                 QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
 
@@ -231,4 +283,46 @@ void RecallView::closeEvent(QCloseEvent* event) {
 void RecallView::setRegexp(const QString& text) {
 
     m_itemSFProxy->setFilterRegExp(QRegExp(text, Qt::CaseInsensitive, QRegExp::FixedString));
+}
+
+//------------------------------------------------------------------------------
+void RecallView::showEvent(QShowEvent *) {
+    initCrypto();
+}
+
+//------------------------------------------------------------------------------
+// Initialise the cryptographic engine (which may prompt the user for several
+// choices on the first run) and setup crypto features accordingly.
+//------------------------------------------------------------------------------
+void RecallView::initCrypto() {
+    CryptoMediator* cm = new CryptoMediator(this);
+    setEncryption(cm->gpgEnabled());
+}
+
+//------------------------------------------------------------------------------
+void RecallView::setEncryption(bool enabled) {
+    m_cryptToggler->setVisible(true);
+    m_cryptToggler->setEnabled(true);
+}
+
+//------------------------------------------------------------------------------
+// Encrypts an unencrypted item or decrypts an encrypted one.
+//------------------------------------------------------------------------------
+void RecallView::toggleCrypt() {
+}
+
+//------------------------------------------------------------------------------
+void RecallView::setLockImage(bool show) {
+    if (show) {
+        m_contentEdit->setStyleSheet(
+            "QPlainTextEdit { "
+                "background-image: url(:/img/lockdown); "
+                "background-repeat: no-repeat;"
+                "background-position: center;"
+            "}"
+        );
+    }
+    else {
+        m_contentEdit->setStyleSheet("");
+    }
 }

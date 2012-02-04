@@ -4,6 +4,7 @@
 //------------------------------------------------------------------------------
 #include <QStringList>
 #include <QVector>
+#include <QDateTime>
 //------------------------------------------------------------------------------
 class Serializer;
 //------------------------------------------------------------------------------
@@ -14,9 +15,13 @@ class Serializer;
 //------------------------------------------------------------------------------
 struct QtItemWrapper {
     int			id;
+    bool		encrypted;
     QString 	title;
     QString 	content;
     QStringList tags;
+    QDateTime   timestamp;
+
+    QtItemWrapper() : id(0), encrypted(false) {}
 };
 
 //------------------------------------------------------------------------------

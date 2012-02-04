@@ -47,17 +47,25 @@ class RecallView : public QMainWindow {
         //----------------------------------------------------------------------
         void notesChanged(const QModelIndex&, const QString text);
 
+    public slots:
+        void setEncryption(bool);
+
     private slots:
         void updateNotes(const QModelIndex&, const QModelIndex&);
+        void setRegexp(const QString&);
+        void toggleCrypt();
         void trashItem();
         void notesChanged();
-        void setRegexp(const QString&);
 
     private:
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
         void keyPressEvent(QKeyEvent*);
+        void showEvent(QShowEvent *);
         void closeEvent(QCloseEvent*);
+        void initCrypto();
+        void setLockImage(bool show);
+        QString decrypt(const QtItemWrapper *);
 
         ItemModel*   	 		  m_itemModel;
         QTreeView*   	 		  m_itemView;
@@ -70,6 +78,7 @@ class RecallView : public QMainWindow {
         ItemSortFilterProxyModel* m_itemSFProxy;
         QAction*				  m_trashAction;
         QAction*				  m_saveAction;
+        QAction*				  m_cryptToggler;
 
         bool			 itemNotesChanged;
 };

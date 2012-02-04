@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 //------------------------------------------------------------------------------
+#define DATE_FMT "yyyy-MM-dd hh:mm:ss"
 
 //------------------------------------------------------------------------------
 // Conversion Helpers
@@ -34,10 +35,12 @@ QtItemWrapper* wrapItem(const Item& item) {
     wrapTagList(item.tags, wrappedTags);
 
     QtItemWrapper* i = new QtItemWrapper;
-    i->id      = item.id;
-    i->title   = item.title.c_str();
-    i->content = item.content.c_str();
-    i->tags    = wrappedTags;
+    i->id           = item.id;
+    i->encrypted    = item.encrypted;
+    i->title        = item.title.c_str();
+    i->content      = item.content.c_str();
+    i->timestamp    = QDateTime::fromString(DATE_FMT);
+    i->tags         = wrappedTags;
     return i;
 }
 
@@ -48,8 +51,10 @@ Item unwrapItem(const QtItemWrapper& item) {
 
     Item rv = {
         item.id,
+        item.encrypted ? 1 : 0,
         item.title.toStdString(),
         item.content.toStdString(),
+        item.timestamp.toString(DATE_FMT).toStdString(),
         unwrappedTags
     };
     return rv;
@@ -88,6 +93,9 @@ const QVector<QtItemWrapper*>& QtSerializerWrapper::items() const {
 
 //------------------------------------------------------------------------------
 // TODO: Error handling
+// TODO: Add readAll -> the tagged select gets exponentially less efficient.
+//				        Since the SFProxy, we're not even using it other than
+//						as a select all.
 //------------------------------------------------------------------------------
 void QtSerializerWrapper::read(const QStringList& tags) {
 

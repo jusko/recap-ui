@@ -1,5 +1,5 @@
-Pre-pre Alpha ;)
-----------------
+Pre Alpha Release
+------------------
 
 * Essential Improvements
    - [X] Confirm cancel on escape!
@@ -30,13 +30,16 @@ Pre-pre Alpha ;)
    - [X] Ensure transaction safety
    - [X] Tag box needs to only show a set number of tags and be scrollable
    - [X] Save previous window geometry settings
-   - [ ] Encrypted entries
+   - [X] Encrypted entries
+
    - [-] Internote links
         + Deferred to qorg component
    - [ ] Revise tag filtering in recallview
      + [ ] Use a tag checkbox list to filter tags separately to the search
      + [ ] Implement improved autocompleter for the search line edit
+     + [ ] Modify query engine to select all (rather than all by tag)
    - [ ] Create readme and install files
+   - [ ] If new instance started while current open, simply bring window to front
 
 Evaluate use case for service
 ------------------------------

@@ -47,6 +47,17 @@ inline bool RecapApp::recallMode(const char *arg) const {
 inline bool RecapApp::isValid(const char* arg) const {
     return captureMode(arg) || recallMode(arg);
 }
+//------------------------------------------------------------------------------
+// Initial window positioning helper
+// TODO: Improve so that never splits across virtual desktop
+//------------------------------------------------------------------------------
+inline void setPosition(QWidget* w) {
+    QPoint pt = QCursor::pos();
+    w->setGeometry(pt.x() - w->width() / 2,
+                   pt.y() - w->height() /2,
+                   w->width(), w->height());
+}
+
 
 //------------------------------------------------------------------------------
 // Ctor:
@@ -62,10 +73,6 @@ RecapApp::RecapApp(int& argc, char** argv)
     if (argc != 2 || !isValid(argv[1])) {
         throw std::runtime_error(usage(argv[0]));
     }
-
-    //---
-    // TODO: Parse config file options
-    //---
 
     // Create home directory
     QDir homeDir(HomeDirectory);
@@ -86,12 +93,7 @@ RecapApp::RecapApp(int& argc, char** argv)
     else {
         screen = m_recallView = new RecallView(*m_serializerWrapper);
     }
-
-    // TODO: Improve so that never splits across virtual desktop
-    QPoint pt = QCursor::pos();
-    screen->setGeometry(pt.x() - screen->width() / 2,
-                        pt.y() - screen->height() /2,
-                        screen->width(), screen->height());
+    setPosition(screen);
     screen->show();
 }
 

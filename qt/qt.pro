@@ -5,7 +5,8 @@ HEADERS += \
     src/itemmodel.h \
     src/qtserializerwrapper.h \
     src/recapapp.h \
-    src/itemsortfilterproxymodel.h
+    src/itemsortfilterproxymodel.h \
+    src/cryptomediator.h
 
 SOURCES += \
     src/captureform.cpp \
@@ -15,7 +16,8 @@ SOURCES += \
     src/itemmodel.cpp \
     src/qtserializerwrapper.cpp \
     src/recapapp.cpp \
-    src/itemsortfilterproxymodel.cpp
+    src/itemsortfilterproxymodel.cpp \
+    src/cryptomediator.cpp
 
 INCLUDEPATH += include/ src/
 
