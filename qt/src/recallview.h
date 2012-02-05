@@ -21,7 +21,7 @@ class QAction;
 
 //------------------------------------------------------------------------------
 // The Ui seen in the application's "recall mode". Sole purpose is to recall
-// notes saved in "capture mode" both rapidly and intuitively.
+// and edit notes saved in "capture mode" both _rapidly_ and _intuitively_.
 //------------------------------------------------------------------------------
 class RecallView : public QMainWindow {
     Q_OBJECT
@@ -49,11 +49,14 @@ class RecallView : public QMainWindow {
 
     public slots:
         void setEncryption(bool);
+        void notifyError(const QString&);
 
     private slots:
         void updateNotes(const QModelIndex&, const QModelIndex&);
+        void update(const QtItemWrapper*);
         void setRegexp(const QString&);
-        void toggleCrypt();
+        void addEncryption();
+        void removeEncryption();
         void trashItem();
         void notesChanged();
 
@@ -61,11 +64,14 @@ class RecallView : public QMainWindow {
         void initGui(const QtSerializerWrapper&);
         void setConnections(const QtSerializerWrapper&);
         void keyPressEvent(QKeyEvent*);
-        void showEvent(QShowEvent *);
+        void showEvent(QShowEvent*);
         void closeEvent(QCloseEvent*);
-        void initCrypto();
         void setLockImage(bool show);
+        void initCrypto();
+        void setToolbar();
+
         QString decrypt(const QtItemWrapper *);
+        QtItemWrapper* currentItem(const QModelIndex &item) const;
 
         ItemModel*   	 		  m_itemModel;
         QTreeView*   	 		  m_itemView;
@@ -78,7 +84,8 @@ class RecallView : public QMainWindow {
         ItemSortFilterProxyModel* m_itemSFProxy;
         QAction*				  m_trashAction;
         QAction*				  m_saveAction;
-        QAction*				  m_cryptToggler;
+        QAction*				  m_addEncryptionAction;
+        QAction*				  m_removeEncryptionAction;
 
         bool			 itemNotesChanged;
 };

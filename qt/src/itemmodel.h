@@ -42,6 +42,39 @@ class ItemModel : public QAbstractListModel {
         //---------------------------------------------------------------------
         ItemModel(const QtSerializerWrapper& serializer, QObject *parent = 0);
 
+
+        //---------------------------------------------------------------------
+        // Updates an item's notes.
+        // @param index
+        //		  The index of the item to update.
+        // @param notes
+        //        The contents of the notes.
+        // @pre   The item exists in the model.
+        // @post  The item's notes are updated and it is flagged as having been
+        //		  edited.
+        //---------------------------------------------------------------------
+        void updateNotes(const QModelIndex& index, const QString& notes);
+
+        //---------------------------------------------------------------------
+        // Encrypts an item's notes.
+        // @param index
+        //		  The index of the item to encrypt.
+        // @pre   The item exists in the model.
+        // @post  The item's notes are encrypted and it is flagged as having
+        //		  been edited.
+        //---------------------------------------------------------------------
+        void encryptItem(const QModelIndex& index);
+
+        //---------------------------------------------------------------------
+        // Decrypts an item's notes.
+        // @param index
+        //		  The index of the item to decrypt.
+        // @pre   The item exists in the model.
+        // @post  The item's notes are decrypted and it is flagged as having
+        //		  been edited.
+        //---------------------------------------------------------------------
+        void decryptItem(const QModelIndex& index);
+
         ~ItemModel();
 
     public slots:
@@ -68,18 +101,6 @@ class ItemModel : public QAbstractListModel {
         //---------------------------------------------------------------------
         void saveItems();
 
-        //---------------------------------------------------------------------
-        // Updates an item's notes.
-        // @param index
-        //		  The index of the item to update.
-        // @param notes
-        //        The contents of the notes.
-        // @pre   The item exists in the model.
-        // @post  The item's notes are updated and it is flagged as having been
-        //		  edited.
-        //---------------------------------------------------------------------
-        void updateNotes(const QModelIndex& index, const QString& notes);
-
     public:
         //---------------------------------------------------------------------
         // Reimplemented QAbstractListModel interface
@@ -97,9 +118,12 @@ class ItemModel : public QAbstractListModel {
         virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 
     signals:
+        // TODO: Document
+        void errorNotification(const QString& message);
         void sendTrashRequest(const QtItemWrapper&);
         void sendUpdateRequest(const QtItemWrapper&);
         void itemEdited(bool);
+        void itemEncoded(const QtItemWrapper*);
         void itemsSaved(bool);
 
     private:

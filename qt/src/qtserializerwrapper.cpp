@@ -39,7 +39,7 @@ QtItemWrapper* wrapItem(const Item& item) {
     i->encrypted    = item.encrypted;
     i->title        = item.title.c_str();
     i->content      = item.content.c_str();
-    i->timestamp    = QDateTime::fromString(DATE_FMT);
+    i->timestamp    = QDateTime::fromString(item.timestamp.c_str(), DATE_FMT);
     i->tags         = wrappedTags;
     return i;
 }

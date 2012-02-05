@@ -2,6 +2,7 @@
 #include "itemmodel.h"
 #include "qtserializerwrapper.h"
 #include "taglineedit.h"
+#include "cryptomediator.h"
 #include <string>
 #include <vector>
 //------------------------------------------------------------------------------
@@ -79,7 +80,7 @@ int ItemModel::rowCount(const QModelIndex &) const {
 
 //------------------------------------------------------------------------------
 int ItemModel::columnCount(const QModelIndex &) const {
-    return 2;
+    return 3;
 }
 
 //------------------------------------------------------------------------------
@@ -87,7 +88,16 @@ QVariant ItemModel::headerData(int section,
                                Qt::Orientation orientation, int role) const {
 
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
-        return section == 0 ? QString(tr("Title")) : QString(tr("Tags"));
+        switch (section) {
+            case 0:
+                return tr("Title");
+            case 1:
+                return tr("Tags");
+            case 2:
+                return tr("Last Edit");
+            default:
+                return QVariant();
+        }
     }
     return QVariant();
 }
@@ -95,17 +105,29 @@ QVariant ItemModel::headerData(int section,
 //------------------------------------------------------------------------------
 QVariant ItemModel::data(const QModelIndex &index, int role) const {
 
-    if (index.isValid() && role == Qt::DisplayRole) {
-
+    if (index.isValid()) {
         int row = index.row();
-        if (row < m_items.size()) {
+        int col = index.column();
 
-            int col = index.column();
-            if (col == 0) {
-                return m_items[row]->title;
+        if (role == Qt::DisplayRole) {
+            if (row < m_items.size()) {
+                switch (col) {
+                    case 0:
+                        return m_items[row]->title;
+                    case 1:
+                        return m_items[row]->tags.join(
+                            TagLineEdit::TagSeparator
+                        );
+                    case 2:
+                        return m_items[row]->timestamp;
+                    default:
+                        return QVariant();
+                }
             }
-            else if (col == 1) {
-                return m_items[row]->tags.join(TagLineEdit::TagSeparator);
+        }
+        if (role == Qt::DecorationRole) {
+            if (row < m_items.size() && col == 0 && m_items[row]->encrypted) {
+                return QPixmap(":/img/item-encrypted");
             }
         }
     }
@@ -114,7 +136,6 @@ QVariant ItemModel::data(const QModelIndex &index, int role) const {
 
 //------------------------------------------------------------------------------
 // TODO: Retain original text initially on edit (esp. tags).
-//		 add date to column 3
 bool ItemModel::setData(const QModelIndex &index,
                         const QVariant &value, int role) {
 
@@ -174,12 +195,31 @@ void ItemModel::trashItem(const QModelIndex &index) {
 }
 
 //------------------------------------------------------------------------------
+// TODO: Improve performance if it becomes an issue (encrypted items get
+//	     rencrypted on each call---but it seems performant enough for now).
+//------------------------------------------------------------------------------
 void ItemModel::updateNotes(const QModelIndex &index, const QString &notes) {
     QtItemWrapper* item = itemAt(index);
-    if (item && item->content != notes) {
-        item->content = notes;
-        m_editMap.insert(item->id, item);
-        emit itemEdited(true);
+    if (item) {
+        if (item->encrypted) {
+            CryptoMediator cm;
+            QString original = item->content;
+
+            item->content = notes;
+            if (cm.encrypt(*item)) {
+                m_editMap.insert(item->id, item);
+                emit itemEdited(true);
+            }
+            else {
+                item->content = original;
+                emit errorNotification(cm.lastError());
+            }
+        }
+        else {
+            item->content = notes;
+            m_editMap.insert(item->id, item);
+            emit itemEdited(true);
+        }
     }
 }
 
@@ -196,5 +236,37 @@ void ItemModel::saveItems() {
         }
         deleteEditMap();
         emit itemsSaved(true);
+    }
+}
+
+//------------------------------------------------------------------------------
+void ItemModel::encryptItem(const QModelIndex &index) {
+    QtItemWrapper* item = itemAt(index);
+    Q_ASSERT(item);
+
+    CryptoMediator cm;
+    if (cm.encrypt(*item)) {
+        m_editMap.insert(item->id, item);
+        emit itemEdited(true);
+        emit itemEncoded(item);
+    }
+    else {
+        emit errorNotification(cm.lastError());
+    }
+}
+
+//------------------------------------------------------------------------------
+void ItemModel::decryptItem(const QModelIndex &index) {
+    QtItemWrapper* item = itemAt(index);
+    Q_ASSERT(item);
+
+    CryptoMediator cm;
+    if (cm.decrypt(*item)) {
+        m_editMap.insert(item->id, item);
+        emit itemEdited(true);
+        emit itemEncoded(item);
+    }
+    else {
+        emit errorNotification(cm.lastError());
     }
 }

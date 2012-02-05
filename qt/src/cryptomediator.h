@@ -62,6 +62,20 @@ class CryptoMediator : public QObject {
         //----------------------------------------------------------------------
         // Decryption operation
         // @param  item
+        //		   The item whose notes are to be decrypted
+        // @return true  if the operation succeeded
+        // @return fales if the operation failed
+        // @pre    Decryption features are enabled and a public key has been
+        //		   selected.
+        // @post   The item's notes are decrypted into plaintext. If the
+        //		   operation failed, lastError() will return a description of
+        //		   the error.
+        //----------------------------------------------------------------------
+        bool decrypt(QtItemWrapper& item) const;
+
+        //----------------------------------------------------------------------
+        // Decryption operation (overload)
+        // @param  item
         //	       The item whose notes are to be decrypted
         // @param  outBuffer
         //		   The buffer to store the decrypted plain text.
@@ -73,7 +87,7 @@ class CryptoMediator : public QObject {
         //		   the item's notes. If the operation failed, lastError() will
         //		   return a description of the error.
         //
-        // @note   This operation is different to removeEncryption() in that
+        // @note   This operation is different to the original in that
         //		   the item's contents /remain encrypted/ for persistance.
         //----------------------------------------------------------------------
         bool decrypt(const QtItemWrapper& item, QString& outBuffer) const;

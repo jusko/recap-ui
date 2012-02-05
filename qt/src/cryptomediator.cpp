@@ -274,6 +274,17 @@ bool CryptoMediator::encrypt(QtItemWrapper& item) const {
 }
 
 //------------------------------------------------------------------------------
+bool CryptoMediator::decrypt(QtItemWrapper& item) const {
+    if (decrypt(item, item.content)) {
+        item.encrypted = false;
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//------------------------------------------------------------------------------
 bool CryptoMediator::decrypt(const QtItemWrapper& item,
                              QString& outBuffer) const {
 

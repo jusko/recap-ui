@@ -97,7 +97,7 @@ void CaptureForm::initGui(const QtSerializerWrapper &writer) {
 
     // Encrypt
     m_encryptCheckBox = new QCheckBox(tr("&Encrypt"), this);
-    m_encryptCheckBox->setToolTip(tr("The notes of the current item will be encrypted."));
+    m_encryptCheckBox->setToolTip(tr("The notes of the item will be encrypted."));
     gl->addWidget(m_encryptCheckBox, 8, 0);
     m_encryptCheckBox->setVisible(false);
     m_encryptCheckBox->setEnabled(false);

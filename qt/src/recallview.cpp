@@ -41,7 +41,8 @@ RecallView::RecallView(const QtSerializerWrapper& serializer,
       m_itemSFProxy(0),
       m_trashAction(0),
       m_saveAction(0),
-      m_cryptToggler(0),
+      m_addEncryptionAction(0),
+      m_removeEncryptionAction(0),
       itemNotesChanged(false) {
 
     initGui(serializer);
@@ -54,38 +55,7 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
       setWindowTitle(tr("Recap - Recall Mode"));
       setGeometry(0, 0, 800, 600);
 
-      // Toolbar
-      m_toolbar = new QToolBar;
-      m_toolbar->setObjectName("toolbar");
-      m_toolbar->setMovable(true);
-      m_trashAction = m_toolbar->addAction(
-          QCommonStyle().standardIcon(QCommonStyle::SP_TrashIcon),
-          tr("Trash the selected item."),
-          this,
-          SLOT(trashItem())
-      );
-      m_trashAction->setEnabled(false);
-
-      m_saveAction = m_toolbar->addAction(
-          QCommonStyle().standardIcon(QCommonStyle::SP_DialogSaveButton),
-          tr("Save changes"),
-          m_itemModel,
-          SLOT(saveItems())
-      );
-      m_saveAction->setEnabled(false);
-      connect(m_itemModel,  SIGNAL(itemEdited(bool)),
-              m_saveAction, SLOT(setEnabled(bool)));
-
-      connect(m_itemModel,  SIGNAL(itemsSaved(bool)),
-              m_saveAction, SLOT(setDisabled(bool)));
-
-      // TODO: Implement crypto toggling
-      // Icon and text toggled depending on item state
-      m_cryptToggler = m_toolbar->addAction("", this, SLOT(toggleCrypt()));
-      m_cryptToggler->setVisible(false);
-      m_cryptToggler->setEnabled(false);
-
-      addToolBar(Qt::LeftToolBarArea, m_toolbar);
+      setToolbar();
 
       // Left Dock
       m_tagListDock = new QDockWidget;
@@ -133,8 +103,10 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
       m_contentEdit->setTabStopWidth(8);
       r_layout->addWidget(m_contentEdit, 1, 0);
       notesLabel->setBuddy(m_contentEdit);
+      m_contentEdit->setEnabled(false);
 
       // Restore settings
+      // TODO: Column sizes
       QSettings conf(RecapApp::ConfFile, QSettings::NativeFormat);
       conf.beginGroup("RecallView");
       restoreGeometry(conf.value("geometry").toByteArray());
@@ -143,11 +115,66 @@ void RecallView::initGui(const QtSerializerWrapper& serializer) {
 }
 
 //------------------------------------------------------------------------------
+void RecallView::setToolbar() {
+      m_toolbar = new QToolBar;
+      m_toolbar->setObjectName("toolbar");
+      m_toolbar->setMovable(true);
+
+      m_trashAction = m_toolbar->addAction(
+          QCommonStyle().standardIcon(QCommonStyle::SP_TrashIcon),
+          tr("Trash the selected item."),
+          this,
+          SLOT(trashItem())
+      );
+      m_trashAction->setEnabled(false);
+
+      m_saveAction = m_toolbar->addAction(
+          QCommonStyle().standardIcon(QCommonStyle::SP_DialogSaveButton),
+          tr("Save changes"),
+          m_itemModel,
+          SLOT(saveItems())
+      );
+      m_saveAction->setEnabled(false);
+
+      connect(m_itemModel,  SIGNAL(itemEdited(bool)),
+              m_saveAction, SLOT(setEnabled(bool)));
+
+      connect(m_itemModel,  SIGNAL(itemsSaved(bool)),
+              m_saveAction, SLOT(setDisabled(bool)));
+
+      m_addEncryptionAction = m_toolbar->addAction(
+            QIcon(":/img/encrypt"),
+            tr("Encrypt item notes."),
+            this,
+            SLOT(addEncryption())
+      );
+      m_addEncryptionAction->setVisible(false);
+      m_addEncryptionAction->setEnabled(false);
+
+      m_removeEncryptionAction = m_toolbar->addAction(
+            QIcon(":/img/decrypt"),
+            tr("Remove encryption on item notes."),
+            this,
+            SLOT(removeEncryption())
+      );
+      m_removeEncryptionAction->setVisible(false);
+      m_removeEncryptionAction->setEnabled(false);
+
+      connect(m_itemModel, SIGNAL(itemEncoded(const QtItemWrapper*)),
+              this, SLOT(update(const QtItemWrapper*)));
+
+      addToolBar(Qt::LeftToolBarArea, m_toolbar);
+}
+
+//------------------------------------------------------------------------------
 void RecallView::setConnections(const QtSerializerWrapper& serializer) {
 
     // Model updating
     connect(m_tagsEdit, SIGNAL(textChanged(QString)),
             m_itemSFProxy, SLOT(setFilterRegExp(QString)));
+
+    connect(m_itemModel, SIGNAL(errorNotification(QString)),
+            this, SLOT(notifyError(QString)));
 
     // Content notes updating
     connect(m_itemView->selectionModel(), SIGNAL(currentChanged(QModelIndex,
@@ -173,18 +200,36 @@ void RecallView::updateNotes(const QModelIndex& current,
             disconnect(m_contentEdit, SIGNAL(textChanged()),
                        this, SLOT(notesChanged()));
 
+            update(item);
             m_contentEdit->setPlainText(decrypt(item));
 
             connect(m_contentEdit, SIGNAL(textChanged()),
                     this, SLOT(notesChanged()));
 
-            m_trashAction->setEnabled(true);
-            m_cryptToggler->setEnabled(true);
             return;
         }
     }
     m_trashAction->setEnabled(false);
-    m_cryptToggler->setEnabled(false);
+    m_addEncryptionAction->setEnabled(false);
+}
+
+//------------------------------------------------------------------------------
+// Updates widget state based on that of item
+// @pre  item is a valid pointer
+// @post If the item is encrypted, the remove encryption option becomes
+//		 available.
+//	     If the item is unencrypted, the add encryption option becomes available.
+//	     If the content edit is currently locked down, it is released.
+//		 The trash action is enabled.
+//------------------------------------------------------------------------------
+void RecallView::update(const QtItemWrapper* item) {
+    m_trashAction->setEnabled(true);
+    m_removeEncryptionAction->setEnabled(item->encrypted);
+    m_addEncryptionAction->setEnabled(!item->encrypted);
+    if (!m_contentEdit->isEnabled()) {
+        setLockImage(false);
+        m_contentEdit->setEnabled(true);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -205,10 +250,6 @@ void RecallView::updateNotes(const QModelIndex& current,
 //		 If the item is unencrypted, return its contents.
 //------------------------------------------------------------------------------
 QString RecallView::decrypt(const QtItemWrapper* item) {
-    if (!m_contentEdit->isEnabled()) {
-        setLockImage(false);
-        m_contentEdit->setEnabled(true);
-    }
     if (!item->encrypted) {
         return item->content;
     }
@@ -217,14 +258,14 @@ QString RecallView::decrypt(const QtItemWrapper* item) {
     CryptoMediator cm;
 
     if (!cm.decrypt(*item, plaintext)) {
+        setLockImage(true);
+        m_contentEdit->setEnabled(false);
         if (!cm.lastError().isEmpty()) {
             QMessageBox::critical(
                 this, tr("Recap - Decryption Error"),
                 cm.lastError()
             );
         }
-        setLockImage(true);
-        m_contentEdit->setEnabled(false);
     }
     return plaintext;
 }
@@ -301,14 +342,28 @@ void RecallView::initCrypto() {
 
 //------------------------------------------------------------------------------
 void RecallView::setEncryption(bool enabled) {
-    m_cryptToggler->setVisible(true);
-    m_cryptToggler->setEnabled(true);
+    m_addEncryptionAction->setVisible(enabled);
+    m_removeEncryptionAction->setVisible(enabled);
 }
 
 //------------------------------------------------------------------------------
-// Encrypts an unencrypted item or decrypts an encrypted one.
+// @pre  An unencrypted item is selected
+// @post A request to encrypt the item's notes is sent
 //------------------------------------------------------------------------------
-void RecallView::toggleCrypt() {
+void RecallView::addEncryption() {
+    m_itemModel->encryptItem(
+        m_itemSFProxy->mapToSource(m_itemView->currentIndex())
+    );
+}
+
+//------------------------------------------------------------------------------
+// @pre  An encrypted item is selected
+// @post A request to decrypt the item's notes is sent
+//------------------------------------------------------------------------------
+void RecallView::removeEncryption() {
+    m_itemModel->decryptItem(
+        m_itemSFProxy->mapToSource(m_itemView->currentIndex())
+    );
 }
 
 //------------------------------------------------------------------------------
@@ -325,4 +380,9 @@ void RecallView::setLockImage(bool show) {
     else {
         m_contentEdit->setStyleSheet("");
     }
+}
+
+//------------------------------------------------------------------------------
+void RecallView::notifyError(const QString& message) {
+    QMessageBox::critical(this, "Recap", message);
 }
