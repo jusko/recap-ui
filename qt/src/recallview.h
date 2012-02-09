@@ -3,20 +3,14 @@
 //------------------------------------------------------------------------------
 #include <QMainWindow>
 //------------------------------------------------------------------------------
-class QToolBar;
 class ItemModel;
 class QModelIndex;
-class QTreeView;
-class TagLineEdit;
-class QComboBox;
-class QPushButton;
-class QPlainTextEdit;
 class QtItemWrapper;
 class QtSerializerWrapper;
-class QDockWidget;
 class QToolBar;
-class ItemSortFilterProxyModel;
+class QTabWidget;
 class QAction;
+class RecallPage;
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -45,48 +39,49 @@ class RecallView : public QMainWindow {
         //----------------------------------------------------------------------
         // Emitted to ItemModel to notify when an item's notes are edited.
         //----------------------------------------------------------------------
-        void notesChanged(const QModelIndex&, const QString text);
+        void updateOnItemModified(const QModelIndex&, const QString text);
 
     public slots:
+        //----------------------------------------------------------------------
+        // Initialises encryption features
+        //----------------------------------------------------------------------
         void setEncryption(bool);
+
+        //----------------------------------------------------------------------
+        // Displays an error message with the string passed as a parameter
+        //----------------------------------------------------------------------
         void notifyError(const QString&);
 
+        //----------------------------------------------------------------------
+        // Updates the toolbar button states based on that of the item.
+        //----------------------------------------------------------------------
+        void updateOnItemChange(const QtItemWrapper*);
+
     private slots:
-        void updateNotes(const QModelIndex&, const QModelIndex&);
-        void update(const QtItemWrapper*);
-        void setRegexp(const QString&);
         void addEncryption();
         void removeEncryption();
         void trashItem();
-        void notesChanged();
+        void addTab();
+        void removeTab();
 
     private:
         void initGui(const QtSerializerWrapper&);
-        void setConnections(const QtSerializerWrapper&);
+        void setToolbar();
+        void setActions();
         void keyPressEvent(QKeyEvent*);
         void showEvent(QShowEvent*);
         void closeEvent(QCloseEvent*);
-        void setLockImage(bool show);
         void initCrypto();
-        void setToolbar();
 
-        QString decrypt(const QtItemWrapper *);
-        QtItemWrapper* currentItem(const QModelIndex &item) const;
-
-        ItemModel*   	 		  m_itemModel;
-        QTreeView*   	 		  m_itemView;
-        TagLineEdit* 	 		  m_tagsEdit;
-//        QComboBox*   	 		  m_tagsBox;
-        QPlainTextEdit*	 		  m_contentEdit;
-        QToolBar*		 		  m_toolbar;
-        QStringList   	 		  m_tags;
-        QDockWidget* 	 		  m_tagListDock;
-        ItemSortFilterProxyModel* m_itemSFProxy;
-        QAction*				  m_trashAction;
-        QAction*				  m_saveAction;
-        QAction*				  m_addEncryptionAction;
-        QAction*				  m_removeEncryptionAction;
-
-        bool			 itemNotesChanged;
+        ItemModel*  m_itemModel;
+        QToolBar*	m_toolbar;
+        QStringList m_tags;
+        QAction*	m_trashAction;
+        QAction*	m_saveAction;
+        QAction*	m_addEncryptionAction;
+        QAction*	m_removeEncryptionAction;
+        QAction*	m_newTabAction;
+        QAction*	m_closeTabAction;
+        QTabWidget* m_tabWidget;
 };
 #endif // RECALLVIEW_H

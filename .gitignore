@@ -8,3 +8,4 @@ qt/qt.pro.user
 qt/Makefile
 test.db
 *.autosave
+qt/qrc_resources.cpp
